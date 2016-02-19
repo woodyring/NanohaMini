@@ -50,88 +50,88 @@ extern void kpk_bitbase_init();
 int main(int argc, char* argv[]) {
 
 	// 標準入出力のバッファリングを無効にする
-  // Disable IO buffering for C and C++ standard libraries
-  setvbuf(stdin, NULL, _IONBF, 0);
-  setvbuf(stdout, NULL, _IONBF, 0);
-  cout.rdbuf()->pubsetbuf(NULL, 0);
-  cin.rdbuf()->pubsetbuf(NULL, 0);
+	// Disable IO buffering for C and C++ standard libraries
+	setvbuf(stdin, NULL, _IONBF, 0);
+	setvbuf(stdout, NULL, _IONBF, 0);
+	cout.rdbuf()->pubsetbuf(NULL, 0);
+	cin.rdbuf()->pubsetbuf(NULL, 0);
 #if defined(NANOHA)
 	init_application_once();
 #endif
 
-  // Startup initializations
+	// Startup initializations
 #ifndef NANOHA
-  init_bitboards();
+	init_bitboards();
 #endif
-  Position::init();
+	Position::init();
 #ifndef NANOHA
-  kpk_bitbase_init();
+	kpk_bitbase_init();
 #endif
-  init_search();
-  Threads.init();
+	init_search();
+	Threads.init();
 
-  if (argc < 2)
-  {
-      // 引数1個
+	if (argc < 2)
+	{
+		// 引数1個
 #if !defined(NANOHA)
-      // Print copyright notice
-      cout << engine_name() << " by " << engine_authors() << endl;
+		// Print copyright notice
+		cout << engine_name() << " by " << engine_authors() << endl;
 
-      if (CpuHasPOPCNT)
-          cout << "Good! CPU has hardware POPCNT." << endl;
+		if (CpuHasPOPCNT)
+			cout << "Good! CPU has hardware POPCNT." << endl;
 #endif
 
 		// USIのコマンド処理
-      // Enter the UCI loop waiting for input
-      uci_loop();
-  }
+		// Enter the UCI loop waiting for input
+		uci_loop();
+	}
 #if defined(NANOHA)
-  else if (string(argv[1]) == "bench" && argc > 2 
-     && (string(argv[2]) == "mate1" || string(argv[2]) == "mate3")) {
-      bench_mate(--argc, ++argv);
-  }
-  else if (string(argv[1]) == "bench" && argc > 2 && string(argv[2]) == "genmove") {
-      bench_genmove(--argc, ++argv);
-  }
-  else if (string(argv[1]) == "bench" && argc > 2 && string(argv[2]) == "eval") {
-      bench_eval(--argc, ++argv);
-  }
-  else if (string(argv[1]) == "qsearch") {
-      test_qsearch(--argc, ++argv);
-  }
-  else if (string(argv[1]) == "see") {
-      test_see(--argc, ++argv);
-  }
-  else if (string(argv[1]) == "problem") {
-      solve_problem(--argc, ++argv);
-  }
+	else if (string(argv[1]) == "bench" && argc > 2 
+	         && (string(argv[2]) == "mate1" || string(argv[2]) == "mate3")) {
+		bench_mate(--argc, ++argv);
+	}
+	else if (string(argv[1]) == "bench" && argc > 2 && string(argv[2]) == "genmove") {
+		bench_genmove(--argc, ++argv);
+	}
+	else if (string(argv[1]) == "bench" && argc > 2 && string(argv[2]) == "eval") {
+		bench_eval(--argc, ++argv);
+	}
+	else if (string(argv[1]) == "qsearch") {
+		test_qsearch(--argc, ++argv);
+	}
+	else if (string(argv[1]) == "see") {
+		test_see(--argc, ++argv);
+	}
+	else if (string(argv[1]) == "problem") {
+		solve_problem(--argc, ++argv);
+	}
 #endif
-  else if (string(argv[1]) == "bench" && argc < 8)
-      benchmark(argc, argv);
-  else
+	else if (string(argv[1]) == "bench" && argc < 8)
+		benchmark(argc, argv);
+	else
 #if defined(NANOHA)
-  {
-      cout << "Usage: nanohamini [Options]" << endl;
-      cout << "Options:\n"
-              "   bench [hash size = 128] [threads = 1] "
-                       "[limit = 12] [fen positions file = default] "
-                       "[limited by depth, time, nodes or perft = depth]\n";
-      cout << "   bench genmove "
-                       "[fen positions file = default] "
-                       "[display moves = no]\n";
-      cout << "   bench mate1 "
-                       "[fen positions file = default] "
-                       "[loop = yes] [display = no]\n";
-      cout << "   bench mate3 "
-                       "[fen positions file = default] "
-                       "[loop = yes] [display moves = no]" << endl;
-  }
+	{
+		cout << "Usage: nanohamini [Options]" << endl;
+		cout << "Options:\n"
+		        "   bench [hash size = 128] [threads = 1] "
+		                 "[limit = 12] [fen positions file = default] "
+		                 "[limited by depth, time, nodes or perft = depth]\n";
+		cout << "   bench genmove "
+		                 "[fen positions file = default] "
+		                 "[display moves = no]\n";
+		cout << "   bench mate1 "
+		                 "[fen positions file = default] "
+		                 "[loop = yes] [display = no]\n";
+		cout << "   bench mate3 "
+		                 "[fen positions file = default] "
+		                 "[loop = yes] [display moves = no]" << endl;
+	}
 #else
-      cout << "Usage: stockfish bench [hash size = 128] [threads = 1] "
-           << "[limit = 12] [fen positions file = default] "
-           << "[limited by depth, time, nodes or perft = depth]" << endl;
+	cout << "Usage: stockfish bench [hash size = 128] [threads = 1] "
+	     << "[limit = 12] [fen positions file = default] "
+	     << "[limited by depth, time, nodes or perft = depth]" << endl;
 #endif
 
-  Threads.exit();
-  return 0;
+	Threads.exit();
+	return 0;
 }

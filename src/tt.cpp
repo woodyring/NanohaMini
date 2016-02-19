@@ -27,13 +27,13 @@ TranspositionTable TT; // Our global transposition table
 
 TranspositionTable::TranspositionTable() {
 
-  size = generation = 0;
-  entries = NULL;
+	size = generation = 0;
+	entries = NULL;
 }
 
 TranspositionTable::~TranspositionTable() {
 
-  delete [] entries;
+	delete [] entries;
 }
 
 
@@ -42,28 +42,28 @@ TranspositionTable::~TranspositionTable() {
 
 void TranspositionTable::set_size(size_t mbSize) {
 
-  size_t newSize = 1024;
+	size_t newSize = 1024;
 
-  // Transposition table consists of clusters and each cluster consists
-  // of ClusterSize number of TTEntries. Each non-empty entry contains
-  // information of exactly one position and newSize is the number of
-  // clusters we are going to allocate.
-  while (2ULL * newSize * sizeof(TTCluster) <= (mbSize << 20))
-      newSize *= 2;
+	// Transposition table consists of clusters and each cluster consists
+	// of ClusterSize number of TTEntries. Each non-empty entry contains
+	// information of exactly one position and newSize is the number of
+	// clusters we are going to allocate.
+	while (2ULL * newSize * sizeof(TTCluster) <= (mbSize << 20))
+		newSize *= 2;
 
-  if (newSize == size)
-      return;
+	if (newSize == size)
+		return;
 
-  size = newSize;
-  delete [] entries;
-  entries = new (std::nothrow) TTCluster[size];
-  if (!entries)
-  {
-      std::cerr << "Failed to allocate " << mbSize
-                << "MB for transposition table." << std::endl;
-      exit(EXIT_FAILURE);
-  }
-  clear();
+	size = newSize;
+	delete [] entries;
+	entries = new (std::nothrow) TTCluster[size];
+	if (!entries)
+	{
+		std::cerr << "Failed to allocate " << mbSize
+		          << "MB for transposition table." << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	clear();
 }
 
 
@@ -73,7 +73,7 @@ void TranspositionTable::set_size(size_t mbSize) {
 
 void TranspositionTable::clear() {
 
-  memset(entries, 0, size * sizeof(TTCluster));
+	memset(entries, 0, size * sizeof(TTCluster));
 }
 
 
@@ -90,48 +90,48 @@ void TranspositionTable::store(const Key posKey, uint32_t h, Value v, ValueType 
 #else
 void TranspositionTable::store(const Key posKey, Value v, ValueType t, Depth d, Move m, Value statV, Value kingD) {
 #endif
-  int c1, c2, c3;
-  TTEntry *tte, *replace;
+	int c1, c2, c3;
+	TTEntry *tte, *replace;
 #if defined(NANOHA)
-  uint64_t posKey48 = (posKey & ~UINT64_C(0xFFFF)); // Use the high 48 bits as key inside the cluster
+	uint64_t posKey48 = (posKey & ~UINT64_C(0xFFFF)); // Use the high 48 bits as key inside the cluster
 #else
-  uint32_t posKey32 = posKey >> 32; // Use the high 32 bits as key inside the cluster
+	uint32_t posKey32 = posKey >> 32; // Use the high 32 bits as key inside the cluster
 #endif
 
-  tte = replace = first_entry(posKey);
+	tte = replace = first_entry(posKey);
 
-  for (int i = 0; i < ClusterSize; i++, tte++)
-  {
+	for (int i = 0; i < ClusterSize; i++, tte++)
+	{
 #if defined(NANOHA)
-      if (!tte->key() || (tte->key() == posKey48 && tte->hand() == h)) // Empty or overwrite old
+		if (!tte->key() || (tte->key() == posKey48 && tte->hand() == h)) // Empty or overwrite old
 #else
-      if (!tte->key() || tte->key() == posKey32) // Empty or overwrite old
+		if (!tte->key() || tte->key() == posKey32) // Empty or overwrite old
 #endif
-      {
-          // Preserve any existing ttMove
-          if (m == MOVE_NONE)
-              m = tte->move();
+		{
+			// Preserve any existing ttMove
+			if (m == MOVE_NONE)
+				m = tte->move();
 
 #if defined(NANOHA)
-          tte->save(posKey48, h, v, t, d, m, generation, statV, kingD);
+			tte->save(posKey48, h, v, t, d, m, generation, statV, kingD);
 #else
-          tte->save(posKey32, v, t, d, m, generation, statV, kingD);
+			tte->save(posKey32, v, t, d, m, generation, statV, kingD);
 #endif
-          return;
-      }
+			return;
+		}
 
-      // Implement replace strategy
-      c1 = (replace->generation() == generation ?  2 : 0);
-      c2 = (tte->generation() == generation || tte->type() == VALUE_TYPE_EXACT ? -2 : 0);
-      c3 = (tte->depth() < replace->depth() ?  1 : 0);
+		// Implement replace strategy
+		c1 = (replace->generation() == generation ?  2 : 0);
+		c2 = (tte->generation() == generation || tte->type() == VALUE_TYPE_EXACT ? -2 : 0);
+		c3 = (tte->depth() < replace->depth() ?  1 : 0);
 
-      if (c1 + c2 + c3 > 0)
-          replace = tte;
-  }
+		if (c1 + c2 + c3 > 0)
+			replace = tte;
+	}
 #if defined(NANOHA)
-  replace->save(posKey48, h, v, t, d, m, generation, statV, kingD);
+	replace->save(posKey48, h, v, t, d, m, generation, statV, kingD);
 #else
-  replace->save(posKey32, v, t, d, m, generation, statV, kingD);
+	replace->save(posKey32, v, t, d, m, generation, statV, kingD);
 #endif
 }
 
@@ -142,23 +142,23 @@ void TranspositionTable::store(const Key posKey, Value v, ValueType t, Depth d, 
 
 #if defined(NANOHA)
 TTEntry* TranspositionTable::probe(const Key posKey, uint32_t h) const {
-  uint64_t posKey48 = (posKey & ~UINT64_C(0xFFFF));
-  TTEntry* tte = first_entry(posKey);
+	uint64_t posKey48 = (posKey & ~UINT64_C(0xFFFF));
+	TTEntry* tte = first_entry(posKey);
 
-  for (int i = 0; i < ClusterSize; i++, tte++)
-      if (tte->key() == posKey48 && tte->hand() == h)
-          return tte;
+	for (int i = 0; i < ClusterSize; i++, tte++)
+		if (tte->key() == posKey48 && tte->hand() == h)
+			return tte;
 #else
 TTEntry* TranspositionTable::probe(const Key posKey) const {
-  uint32_t posKey32 = posKey >> 32;
-  TTEntry* tte = first_entry(posKey);
+	uint32_t posKey32 = posKey >> 32;
+	TTEntry* tte = first_entry(posKey);
 
-  for (int i = 0; i < ClusterSize; i++, tte++)
-      if (tte->key() == posKey32)
-          return tte;
+	for (int i = 0; i < ClusterSize; i++, tte++)
+		if (tte->key() == posKey32)
+			return tte;
 #endif
 
-  return NULL;
+	return NULL;
 }
 
 
@@ -168,5 +168,5 @@ TTEntry* TranspositionTable::probe(const Key posKey) const {
 /// entries from the current search.
 
 void TranspositionTable::new_search() {
-  generation++;
+	generation++;
 }

@@ -35,31 +35,31 @@
 class History {
 
 public:
-  void clear();
-  Value value(Piece p, Square to) const;
-  void update(Piece p, Square to, Value bonus);
-  Value gain(Piece p, Square to) const;
-  void update_gain(Piece p, Square to, Value g);
+	void clear();
+	Value value(Piece p, Square to) const;
+	void update(Piece p, Square to, Value bonus);
+	Value gain(Piece p, Square to) const;
+	void update_gain(Piece p, Square to, Value g);
 
-  static const Value MaxValue = Value(2000);
+	static const Value MaxValue = Value(2000);
 
 private:
 #if defined(NANOHA)
-  Value history[32][0x100];  // [piece][to_square]
-  Value maxGains[32][0x100]; // [piece][to_square]
+	Value history[32][0x100];  // [piece][to_square]
+	Value maxGains[32][0x100]; // [piece][to_square]
 #else
-  Value history[16][64];  // [piece][to_square]
-  Value maxGains[16][64]; // [piece][to_square]
+	Value history[16][64];  // [piece][to_square]
+	Value maxGains[16][64]; // [piece][to_square]
 #endif
 };
 
 inline void History::clear() {
 #if defined(NANOHA)
-  memset(history,  0, 32 * 0x100 * sizeof(Value));
-  memset(maxGains, 0, 32 * 0x100 * sizeof(Value));
+	memset(history,  0, 32 * 0x100 * sizeof(Value));
+	memset(maxGains, 0, 32 * 0x100 * sizeof(Value));
 #else
-  memset(history,  0, 16 * 64 * sizeof(Value));
-  memset(maxGains, 0, 16 * 64 * sizeof(Value));
+	memset(history,  0, 16 * 64 * sizeof(Value));
+	memset(maxGains, 0, 16 * 64 * sizeof(Value));
 #endif
 }
 
@@ -69,39 +69,39 @@ inline Value History::value(Piece p, Square to) const {
 	if (p == WALL) {
 		std::cerr << "p = " << int(p) << ", to = " << int(to) << std::endl;
 	}
-  assert(0 <= p && p <= 31);
+	assert(0 <= p && p <= 31);
 #endif
-  const int idx = NanohaTbl::Piece2Index[p];
-  return history[idx][to];
+	const int idx = NanohaTbl::Piece2Index[p];
+	return history[idx][to];
 #else
-  return history[p][to];
+	return history[p][to];
 #endif
 }
 
 inline void History::update(Piece p, Square to, Value bonus) {
 #if defined(NANOHA)
-  const int idx = NanohaTbl::Piece2Index[p];
-  if (abs(history[idx][to] + bonus) < MaxValue) history[idx][to] += bonus;
+	const int idx = NanohaTbl::Piece2Index[p];
+	if (abs(history[idx][to] + bonus) < MaxValue) history[idx][to] += bonus;
 #else
-  if (abs(history[p][to] + bonus) < MaxValue) history[p][to] += bonus;
+	if (abs(history[p][to] + bonus) < MaxValue) history[p][to] += bonus;
 #endif
 }
 
 inline Value History::gain(Piece p, Square to) const {
 #if defined(NANOHA)
-  const int idx = NanohaTbl::Piece2Index[p];
-  return maxGains[idx][to];
+	const int idx = NanohaTbl::Piece2Index[p];
+	return maxGains[idx][to];
 #else
-  return maxGains[p][to];
+	return maxGains[p][to];
 #endif
 }
 
 inline void History::update_gain(Piece p, Square to, Value g) {
 #if defined(NANOHA)
-  const int idx = NanohaTbl::Piece2Index[p];
-  maxGains[idx][to] = Max(g, maxGains[idx][to] - 1);
+	const int idx = NanohaTbl::Piece2Index[p];
+	maxGains[idx][to] = Max(g, maxGains[idx][to] - 1);
 #else
-  maxGains[p][to] = Max(g, maxGains[p][to] - 1);
+	maxGains[p][to] = Max(g, maxGains[p][to] - 1);
 #endif
 }
 

@@ -57,72 +57,74 @@
 #define I2HandBishop(hand)  (((hand) & HAND_KA_MASK) >> HAND_KA_SHIFT)
 #define I2HandRook(hand)    (((hand) & HAND_HI_MASK) >> HAND_HI_SHIFT)
 
-enum { promote = 8, EMPTY = 0,	/* VC++でemptyがぶつかるので変更 */
-       pawn, lance, knight, silver, gold, bishop, rook, king, pro_pawn,
-       pro_lance, pro_knight, pro_silver, piece_null, horse, dragon };
+enum {
+	promote = 8, EMPTY = 0,	/* VC++でemptyがぶつかるので変更 */
+	pawn, lance, knight, silver, gold, bishop, rook, king, pro_pawn,
+	pro_lance, pro_knight, pro_silver, piece_null, horse, dragon
+};
 
 enum { nhand = 7, nfile = 9,  nrank = 9,  nsquare = 81 };
 
 #if !defined(EVAL_MICRO)
 enum {
-       // PP用の定義
-       pp_bpawn      =  -9,            		//   -9: 先手Pの位置は 9-80(72箇所)、これを  0- 71にマップ
-       pp_blance     = pp_bpawn   + 72,		//   63: 先手Lの位置は 9-80(72箇所)、これを 72-143にマップ
-       pp_bknight    = pp_blance  + 63,		//  126: 先手Nの位置は18-80(63箇所)、これを144-206にマップ
-       pp_bsilver    = pp_bknight + 81,		//  207: 先手Sの位置は 0-80(81箇所)、これを207-287にマップ
-       pp_bgold      = pp_bsilver + 81,		//  288: 先手Gの位置は 0-80(81箇所)、これを288-368にマップ
-       pp_bbishop    = pp_bgold   + 81,		//  369: 先手Bの位置は 0-80(81箇所)、これを369-449にマップ
-       pp_bhorse     = pp_bbishop + 81,		//  450: 先手Hの位置は 0-80(81箇所)、これを450-530にマップ
-       pp_brook      = pp_bhorse  + 81,		//  531: 先手Rの位置は 0-80(81箇所)、これを531-611にマップ
-       pp_bdragon    = pp_brook   + 81,		//  612: 先手Dの位置は 0-80(81箇所)、これを612-692にマップ
-       pp_bend       = pp_bdragon + 81,		//  693: 先手の最終位置
+	// PP用の定義
+	pp_bpawn      =  -9,            		//   -9: 先手Pの位置は 9-80(72箇所)、これを  0- 71にマップ
+	pp_blance     = pp_bpawn   + 72,		//   63: 先手Lの位置は 9-80(72箇所)、これを 72-143にマップ
+	pp_bknight    = pp_blance  + 63,		//  126: 先手Nの位置は18-80(63箇所)、これを144-206にマップ
+	pp_bsilver    = pp_bknight + 81,		//  207: 先手Sの位置は 0-80(81箇所)、これを207-287にマップ
+	pp_bgold      = pp_bsilver + 81,		//  288: 先手Gの位置は 0-80(81箇所)、これを288-368にマップ
+	pp_bbishop    = pp_bgold   + 81,		//  369: 先手Bの位置は 0-80(81箇所)、これを369-449にマップ
+	pp_bhorse     = pp_bbishop + 81,		//  450: 先手Hの位置は 0-80(81箇所)、これを450-530にマップ
+	pp_brook      = pp_bhorse  + 81,		//  531: 先手Rの位置は 0-80(81箇所)、これを531-611にマップ
+	pp_bdragon    = pp_brook   + 81,		//  612: 先手Dの位置は 0-80(81箇所)、これを612-692にマップ
+	pp_bend       = pp_bdragon + 81,		//  693: 先手の最終位置
 
-       pp_wpawn      = pp_bdragon + 81,		//  693: 後手Pの位置は 0-71(72箇所)、これを 693- 764にマップ
-       pp_wlance     = pp_wpawn   + 72,		//  765: 後手Lの位置は 0-71(72箇所)、これを 765- 836にマップ
-       pp_wknight    = pp_wlance  + 72,		//  837: 後手Nの位置は 0-62(63箇所)、これを 837- 899にマップ
-       pp_wsilver    = pp_wknight + 63,		//  900: 後手Sの位置は 0-80(81箇所)、これを 900- 980にマップ
-       pp_wgold      = pp_wsilver + 81,		//  981: 後手Gの位置は 0-80(81箇所)、これを 981-1061にマップ
-       pp_wbishop    = pp_wgold   + 81,		// 1062: 後手Bの位置は 0-80(81箇所)、これを1062-1142にマップ
-       pp_whorse     = pp_wbishop + 81,		// 1143: 後手Hの位置は 0-80(81箇所)、これを1143-1223にマップ
-       pp_wrook      = pp_whorse  + 81,		// 1224: 後手Rの位置は 0-80(81箇所)、これを1224-1304にマップ
-       pp_wdragon    = pp_wrook   + 81,		// 1305: 後手Dの位置は 0-80(81箇所)、これを1305-1385にマップ
-       pp_end        = pp_wdragon + 81,		// 1386: 後手の最終位置
+	pp_wpawn      = pp_bdragon + 81,		//  693: 後手Pの位置は 0-71(72箇所)、これを 693- 764にマップ
+	pp_wlance     = pp_wpawn   + 72,		//  765: 後手Lの位置は 0-71(72箇所)、これを 765- 836にマップ
+	pp_wknight    = pp_wlance  + 72,		//  837: 後手Nの位置は 0-62(63箇所)、これを 837- 899にマップ
+	pp_wsilver    = pp_wknight + 63,		//  900: 後手Sの位置は 0-80(81箇所)、これを 900- 980にマップ
+	pp_wgold      = pp_wsilver + 81,		//  981: 後手Gの位置は 0-80(81箇所)、これを 981-1061にマップ
+	pp_wbishop    = pp_wgold   + 81,		// 1062: 後手Bの位置は 0-80(81箇所)、これを1062-1142にマップ
+	pp_whorse     = pp_wbishop + 81,		// 1143: 後手Hの位置は 0-80(81箇所)、これを1143-1223にマップ
+	pp_wrook      = pp_whorse  + 81,		// 1224: 後手Rの位置は 0-80(81箇所)、これを1224-1304にマップ
+	pp_wdragon    = pp_wrook   + 81,		// 1305: 後手Dの位置は 0-80(81箇所)、これを1305-1385にマップ
+	pp_end        = pp_wdragon + 81,		// 1386: 後手の最終位置
 
-       // K(P+H)用の定義
-       kp_hand_bpawn   =    0,
-       kp_hand_wpawn   =   19,
-       kp_hand_blance  =   38,
-       kp_hand_wlance  =   43,
-       kp_hand_bknight =   48,
-       kp_hand_wknight =   53,
-       kp_hand_bsilver =   58,
-       kp_hand_wsilver =   63,
-       kp_hand_bgold   =   68,
-       kp_hand_wgold   =   73,
-       kp_hand_bbishop =   78,
-       kp_hand_wbishop =   81,
-       kp_hand_brook   =   84,
-       kp_hand_wrook   =   87,
-       kp_hand_end     =   90,
-       kp_bpawn        =   81,
-       kp_wpawn        =  162,
-       kp_blance       =  225,
-       kp_wlance       =  306,
-       kp_bknight      =  360,
-       kp_wknight      =  441,
-       kp_bsilver      =  504,
-       kp_wsilver      =  585,
-       kp_bgold        =  666,
-       kp_wgold        =  747,
-       kp_bbishop      =  828,
-       kp_wbishop      =  909,
-       kp_bhorse       =  990,
-       kp_whorse       = 1071,
-       kp_brook        = 1152,
-       kp_wrook        = 1233,
-       kp_bdragon      = 1314,
-       kp_wdragon      = 1395,
-       kp_end          = 1476
+	// K(P+H)用の定義
+	kp_hand_bpawn   =    0,
+	kp_hand_wpawn   =   19,
+	kp_hand_blance  =   38,
+	kp_hand_wlance  =   43,
+	kp_hand_bknight =   48,
+	kp_hand_wknight =   53,
+	kp_hand_bsilver =   58,
+	kp_hand_wsilver =   63,
+	kp_hand_bgold   =   68,
+	kp_hand_wgold   =   73,
+	kp_hand_bbishop =   78,
+	kp_hand_wbishop =   81,
+	kp_hand_brook   =   84,
+	kp_hand_wrook   =   87,
+	kp_hand_end     =   90,
+	kp_bpawn        =   81,
+	kp_wpawn        =  162,
+	kp_blance       =  225,
+	kp_wlance       =  306,
+	kp_bknight      =  360,
+	kp_wknight      =  441,
+	kp_bsilver      =  504,
+	kp_wsilver      =  585,
+	kp_bgold        =  666,
+	kp_wgold        =  747,
+	kp_bbishop      =  828,
+	kp_wbishop      =  909,
+	kp_bhorse       =  990,
+	kp_whorse       = 1071,
+	kp_brook        = 1152,
+	kp_wrook        = 1233,
+	kp_bdragon      = 1314,
+	kp_wdragon      = 1395,
+	kp_end          = 1476
 };
 #endif
 
@@ -133,7 +135,7 @@ namespace {
 	short fv_pp[pp_bend][pp_end];
 	short fv_kp[nsquare][kp_end];
 #endif
-};
+}
 
 namespace NanohaTbl {
 	const short z2sq[] = {
@@ -642,70 +644,70 @@ int Position::evaluate(const Color us) const
 	static int count=0;
 	count++;
 
-  sum = 0;
-  sq_bk = SQ_BKING;
-  sq_wk = Inv( SQ_WKING );
+	sum = 0;
+	sq_bk = SQ_BKING;
+	sq_wk = Inv( SQ_WKING );
 
-  sum += fv_kp[sq_bk][kp_hand_bpawn   + I2HandPawn(HAND_B)];
-  sum += fv_kp[sq_bk][kp_hand_wpawn   + I2HandPawn(HAND_W)];
-  sum -= fv_kp[sq_wk][kp_hand_bpawn   + I2HandPawn(HAND_W)];
-  sum -= fv_kp[sq_wk][kp_hand_wpawn   + I2HandPawn(HAND_B)];
+	sum += fv_kp[sq_bk][kp_hand_bpawn   + I2HandPawn(HAND_B)];
+	sum += fv_kp[sq_bk][kp_hand_wpawn   + I2HandPawn(HAND_W)];
+	sum -= fv_kp[sq_wk][kp_hand_bpawn   + I2HandPawn(HAND_W)];
+	sum -= fv_kp[sq_wk][kp_hand_wpawn   + I2HandPawn(HAND_B)];
 
-  sum += fv_kp[sq_bk][kp_hand_blance  + I2HandLance(HAND_B)];
-  sum += fv_kp[sq_bk][kp_hand_wlance  + I2HandLance(HAND_W)];
-  sum -= fv_kp[sq_wk][kp_hand_blance  + I2HandLance(HAND_W)];
-  sum -= fv_kp[sq_wk][kp_hand_wlance  + I2HandLance(HAND_B)];
+	sum += fv_kp[sq_bk][kp_hand_blance  + I2HandLance(HAND_B)];
+	sum += fv_kp[sq_bk][kp_hand_wlance  + I2HandLance(HAND_W)];
+	sum -= fv_kp[sq_wk][kp_hand_blance  + I2HandLance(HAND_W)];
+	sum -= fv_kp[sq_wk][kp_hand_wlance  + I2HandLance(HAND_B)];
 
-  sum += fv_kp[sq_bk][kp_hand_bknight + I2HandKnight(HAND_B)];
-  sum += fv_kp[sq_bk][kp_hand_wknight + I2HandKnight(HAND_W)];
-  sum -= fv_kp[sq_wk][kp_hand_bknight + I2HandKnight(HAND_W)];
-  sum -= fv_kp[sq_wk][kp_hand_wknight + I2HandKnight(HAND_B)];
+	sum += fv_kp[sq_bk][kp_hand_bknight + I2HandKnight(HAND_B)];
+	sum += fv_kp[sq_bk][kp_hand_wknight + I2HandKnight(HAND_W)];
+	sum -= fv_kp[sq_wk][kp_hand_bknight + I2HandKnight(HAND_W)];
+	sum -= fv_kp[sq_wk][kp_hand_wknight + I2HandKnight(HAND_B)];
 
-  sum += fv_kp[sq_bk][kp_hand_bsilver + I2HandSilver(HAND_B)];
-  sum += fv_kp[sq_bk][kp_hand_wsilver + I2HandSilver(HAND_W)];
-  sum -= fv_kp[sq_wk][kp_hand_bsilver + I2HandSilver(HAND_W)];
-  sum -= fv_kp[sq_wk][kp_hand_wsilver + I2HandSilver(HAND_B)];
+	sum += fv_kp[sq_bk][kp_hand_bsilver + I2HandSilver(HAND_B)];
+	sum += fv_kp[sq_bk][kp_hand_wsilver + I2HandSilver(HAND_W)];
+	sum -= fv_kp[sq_wk][kp_hand_bsilver + I2HandSilver(HAND_W)];
+	sum -= fv_kp[sq_wk][kp_hand_wsilver + I2HandSilver(HAND_B)];
 
-  sum += fv_kp[sq_bk][kp_hand_bgold   + I2HandGold(HAND_B)];
-  sum += fv_kp[sq_bk][kp_hand_wgold   + I2HandGold(HAND_W)];
-  sum -= fv_kp[sq_wk][kp_hand_bgold   + I2HandGold(HAND_W)];
-  sum -= fv_kp[sq_wk][kp_hand_wgold   + I2HandGold(HAND_B)];
+	sum += fv_kp[sq_bk][kp_hand_bgold   + I2HandGold(HAND_B)];
+	sum += fv_kp[sq_bk][kp_hand_wgold   + I2HandGold(HAND_W)];
+	sum -= fv_kp[sq_wk][kp_hand_bgold   + I2HandGold(HAND_W)];
+	sum -= fv_kp[sq_wk][kp_hand_wgold   + I2HandGold(HAND_B)];
 
-  sum += fv_kp[sq_bk][kp_hand_bbishop + I2HandBishop(HAND_B)];
-  sum += fv_kp[sq_bk][kp_hand_wbishop + I2HandBishop(HAND_W)];
-  sum -= fv_kp[sq_wk][kp_hand_bbishop + I2HandBishop(HAND_W)];
-  sum -= fv_kp[sq_wk][kp_hand_wbishop + I2HandBishop(HAND_B)];
+	sum += fv_kp[sq_bk][kp_hand_bbishop + I2HandBishop(HAND_B)];
+	sum += fv_kp[sq_bk][kp_hand_wbishop + I2HandBishop(HAND_W)];
+	sum -= fv_kp[sq_wk][kp_hand_bbishop + I2HandBishop(HAND_W)];
+	sum -= fv_kp[sq_wk][kp_hand_wbishop + I2HandBishop(HAND_B)];
 
-  sum += fv_kp[sq_bk][kp_hand_brook   + I2HandRook(HAND_B)];
-  sum += fv_kp[sq_bk][kp_hand_wrook   + I2HandRook(HAND_W)];
-  sum -= fv_kp[sq_wk][kp_hand_brook   + I2HandRook(HAND_W)];
-  sum -= fv_kp[sq_wk][kp_hand_wrook   + I2HandRook(HAND_B)];
+	sum += fv_kp[sq_bk][kp_hand_brook   + I2HandRook(HAND_B)];
+	sum += fv_kp[sq_bk][kp_hand_wrook   + I2HandRook(HAND_W)];
+	sum -= fv_kp[sq_wk][kp_hand_brook   + I2HandRook(HAND_W)];
+	sum -= fv_kp[sq_wk][kp_hand_wrook   + I2HandRook(HAND_B)];
 
 
 	score = 0;
 	nlist = make_list( &score, list0, list1 );
 
-  for ( i = 0; list0[i] < pp_bend; i++ )
-    {
-      assert(i < nlist);
-      k0 = list0[i];
-      for ( j = i+1; j < nlist; j++ )
+	for ( i = 0; list0[i] < pp_bend; i++ )
 	{
-	  l0 = list0[j];
-	  sum += PcPcOn( k0, l0 );
+		assert(i < nlist);
+		k0 = list0[i];
+		for ( j = i+1; j < nlist; j++ )
+		{
+			l0 = list0[j];
+			sum += PcPcOn( k0, l0 );
+		}
 	}
-    }
 
-  for ( ; i < nlist; i++ )
-    {
-      k1 = list1[i];
-      assert(k1 < pp_bend);
-      for ( j = i+1; j < nlist; j++ )
+	for ( ; i < nlist; i++ )
 	{
-	  l1 = list1[j];
-	  sum -= PcPcOn( k1, l1 );
+		k1 = list1[i];
+		assert(k1 < pp_bend);
+		for ( j = i+1; j < nlist; j++ )
+		{
+			l1 = list1[j];
+			sum -= PcPcOn( k1, l1 );
+		}
 	}
-    }
 
 	score += sum;
 	score /= FV_SCALE;

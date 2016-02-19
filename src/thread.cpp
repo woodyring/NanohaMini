@@ -34,19 +34,19 @@ namespace { extern "C" {
 
 #if defined(_MSC_VER) || defined(_WIN32)
 
-  DWORD WINAPI start_routine(LPVOID thread) {
+	DWORD WINAPI start_routine(LPVOID thread) {
 
-    ((Thread*)thread)->idle_loop(NULL);
-    return 0;
-  }
+		((Thread*)thread)->idle_loop(NULL);
+		return 0;
+	}
 
 #else
 
-  void* start_routine(void* thread) {
+	void* start_routine(void* thread) {
 
-    ((Thread*)thread)->idle_loop(NULL);
-    return NULL;
-  }
+		((Thread*)thread)->idle_loop(NULL);
+		return NULL;
+	}
 
 #endif
 
@@ -58,9 +58,9 @@ namespace { extern "C" {
 
 void Thread::wake_up() {
 
-  lock_grab(&sleepLock);
-  cond_signal(&sleepCond);
-  lock_release(&sleepLock);
+	lock_grab(&sleepLock);
+	cond_signal(&sleepCond);
+	lock_release(&sleepLock);
 }
 
 
@@ -69,10 +69,10 @@ void Thread::wake_up() {
 
 bool Thread::cutoff_occurred() const {
 
-  for (SplitPoint* sp = splitPoint; sp; sp = sp->parent)
-      if (sp->is_betaCutoff)
-          return true;
-  return false;
+	for (SplitPoint* sp = splitPoint; sp; sp = sp->parent)
+		if (sp->is_betaCutoff)
+			return true;
+	return false;
 }
 
 
@@ -85,20 +85,20 @@ bool Thread::cutoff_occurred() const {
 
 bool Thread::is_available_to(int master) const {
 
-  if (is_searching)
-      return false;
+	if (is_searching)
+		return false;
 
-  // Make a local copy to be sure doesn't become zero under our feet while
-  // testing next condition and so leading to an out of bound access.
-  int localActiveSplitPoints = activeSplitPoints;
+	// Make a local copy to be sure doesn't become zero under our feet while
+	// testing next condition and so leading to an out of bound access.
+	int localActiveSplitPoints = activeSplitPoints;
 
-  // No active split points means that the thread is available as a slave for any
-  // other thread otherwise apply the "helpful master" concept if possible.
-  if (   !localActiveSplitPoints
-      || splitPoints[localActiveSplitPoints - 1].is_slave[master])
-      return true;
+	// No active split points means that the thread is available as a slave for any
+	// other thread otherwise apply the "helpful master" concept if possible.
+	if (   !localActiveSplitPoints
+	    || splitPoints[localActiveSplitPoints - 1].is_slave[master])
+		return true;
 
-  return false;
+	return false;
 }
 
 
@@ -108,11 +108,11 @@ bool Thread::is_available_to(int master) const {
 
 void ThreadsManager::read_uci_options() {
 
-  maxThreadsPerSplitPoint = Options["Maximum Number of Threads per Split Point"].value<int>();
-  minimumSplitDepth       = Options["Minimum Split Depth"].value<int>() * ONE_PLY;
-  useSleepingThreads      = Options["Use Sleeping Threads"].value<bool>();
+	maxThreadsPerSplitPoint = Options["Maximum Number of Threads per Split Point"].value<int>();
+	minimumSplitDepth       = Options["Minimum Split Depth"].value<int>() * ONE_PLY;
+	useSleepingThreads      = Options["Use Sleeping Threads"].value<bool>();
 
-  set_size(Options["Threads"].value<int>());
+	set_size(Options["Threads"].value<int>());
 }
 
 
@@ -121,27 +121,27 @@ void ThreadsManager::read_uci_options() {
 
 void ThreadsManager::set_size(int cnt) {
 
-  assert(cnt > 0 && cnt <= MAX_THREADS);
+	assert(cnt > 0 && cnt <= MAX_THREADS);
 
-  activeThreads = cnt;
+	activeThreads = cnt;
 
-  for (int i = 0; i < MAX_THREADS; i++)
-      if (i < activeThreads)
-      {
-          // Dynamically allocate pawn and material hash tables according to the
-          // number of active threads. This avoids preallocating memory for all
-          // possible threads if only few are used as, for instance, on mobile
-          // devices where memory is scarce and allocating for MAX_THREADS could
-          // even result in a crash.
+	for (int i = 0; i < MAX_THREADS; i++)
+		if (i < activeThreads)
+		{
+			// Dynamically allocate pawn and material hash tables according to the
+			// number of active threads. This avoids preallocating memory for all
+			// possible threads if only few are used as, for instance, on mobile
+			// devices where memory is scarce and allocating for MAX_THREADS could
+			// even result in a crash.
 #if !defined(NANOHA)
-          threads[i].pawnTable.init();
-          threads[i].materialTable.init();
+			threads[i].pawnTable.init();
+			threads[i].materialTable.init();
 #endif
 
-          threads[i].do_sleep = false;
-      }
-      else
-          threads[i].do_sleep = true;
+			threads[i].do_sleep = false;
+		}
+		else
+			threads[i].do_sleep = true;
 }
 
 
@@ -150,55 +150,55 @@ void ThreadsManager::set_size(int cnt) {
 
 void ThreadsManager::init() {
 
-  // Initialize threads lock, used when allocating slaves during splitting
-  lock_init(&threadsLock);
+	// Initialize threads lock, used when allocating slaves during splitting
+	lock_init(&threadsLock);
 
-  // Initialize sleep and split point locks
-  for (int i = 0; i < MAX_THREADS; i++)
-  {
-      lock_init(&threads[i].sleepLock);
-      cond_init(&threads[i].sleepCond);
+	// Initialize sleep and split point locks
+	for (int i = 0; i < MAX_THREADS; i++)
+	{
+		lock_init(&threads[i].sleepLock);
+		cond_init(&threads[i].sleepCond);
 
-      for (int j = 0; j < MAX_ACTIVE_SPLIT_POINTS; j++)
-          lock_init(&(threads[i].splitPoints[j].lock));
-  }
+		for (int j = 0; j < MAX_ACTIVE_SPLIT_POINTS; j++)
+			lock_init(&(threads[i].splitPoints[j].lock));
+	}
 
-  // Initialize main thread's associated data
-  threads[0].is_searching = true;
-  threads[0].threadID = 0;
-  set_size(1); // This makes all the threads but the main to go to sleep
+	// Initialize main thread's associated data
+	threads[0].is_searching = true;
+	threads[0].threadID = 0;
+	set_size(1); // This makes all the threads but the main to go to sleep
 
-  // Create and launch all the threads but the main that is already running,
-  // threads will go immediately to sleep.
-  for (int i = 1; i < MAX_THREADS; i++)
-  {
-      threads[i].is_searching = false;
-      threads[i].threadID = i;
+	// Create and launch all the threads but the main that is already running,
+	// threads will go immediately to sleep.
+	for (int i = 1; i < MAX_THREADS; i++)
+	{
+		threads[i].is_searching = false;
+		threads[i].threadID = i;
 
 #if defined(_MSC_VER) || defined(_WIN32) 
 #if defined(NANOHA)
-	// とりあえず、スタックサイズ32MB
-      threads[i].handle = CreateThread(NULL, 1024*1024*32, start_routine, (LPVOID)&threads[i], 0, NULL);
+		// とりあえず、スタックサイズ32MB
+		threads[i].handle = CreateThread(NULL, 1024*1024*32, start_routine, (LPVOID)&threads[i], 0, NULL);
 #else
-      threads[i].handle = CreateThread(NULL, 0, start_routine, (LPVOID)&threads[i], 0, NULL);
+		threads[i].handle = CreateThread(NULL, 0, start_routine, (LPVOID)&threads[i], 0, NULL);
 #endif
-      bool ok = (threads[i].handle != NULL);
+		bool ok = (threads[i].handle != NULL);
 #else
 #if defined(NANOHA)
-      pthread_attr_t attr  ;
-      pthread_attr_init(&attr);
-      pthread_attr_setstacksize(&attr,1024*1024*32);
-      bool ok = (pthread_create(&threads[i].handle, &attr, start_routine, (void*)&threads[i]) == 0);
+		pthread_attr_t attr  ;
+		pthread_attr_init(&attr);
+		pthread_attr_setstacksize(&attr,1024*1024*32);
+		bool ok = (pthread_create(&threads[i].handle, &attr, start_routine, (void*)&threads[i]) == 0);
 #else
-      bool ok = (pthread_create(&threads[i].handle, NULL, start_routine, (void*)&threads[i]) == 0);
+		bool ok = (pthread_create(&threads[i].handle, NULL, start_routine, (void*)&threads[i]) == 0);
 #endif
 #endif
-      if (!ok)
-      {
-          std::cerr << "Failed to create thread number " << i << std::endl;
-          ::exit(EXIT_FAILURE);
-      }
-  }
+		if (!ok)
+		{
+			std::cerr << "Failed to create thread number " << i << std::endl;
+			::exit(EXIT_FAILURE);
+		}
+	}
 }
 
 
@@ -206,36 +206,36 @@ void ThreadsManager::init() {
 
 void ThreadsManager::exit() {
 
-  // Wake up all the slave threads at once. This is faster than "wake and wait"
-  // for each thread and avoids a rare crash once every 10K games under Linux.
-  for (int i = 1; i < MAX_THREADS; i++)
-  {
-      threads[i].do_terminate = true;
-      threads[i].wake_up();
-  }
+	// Wake up all the slave threads at once. This is faster than "wake and wait"
+	// for each thread and avoids a rare crash once every 10K games under Linux.
+	for (int i = 1; i < MAX_THREADS; i++)
+	{
+		threads[i].do_terminate = true;
+		threads[i].wake_up();
+	}
 
-  for (int i = 0; i < MAX_THREADS; i++)
-  {
-      if (i != 0)
-      {
-          // Wait for slave termination
+	for (int i = 0; i < MAX_THREADS; i++)
+	{
+		if (i != 0)
+		{
+			// Wait for slave termination
 #if defined(_MSC_VER)
-          WaitForSingleObject(threads[i].handle, 0);
-          CloseHandle(threads[i].handle);
+			WaitForSingleObject(threads[i].handle, 0);
+			CloseHandle(threads[i].handle);
 #else
-          pthread_join(threads[i].handle, NULL);
+			pthread_join(threads[i].handle, NULL);
 #endif
-      }
+		}
 
-      // Now we can safely destroy locks and wait conditions
-      lock_destroy(&threads[i].sleepLock);
-      cond_destroy(&threads[i].sleepCond);
+		// Now we can safely destroy locks and wait conditions
+		lock_destroy(&threads[i].sleepLock);
+		cond_destroy(&threads[i].sleepCond);
 
-      for (int j = 0; j < MAX_ACTIVE_SPLIT_POINTS; j++)
-          lock_destroy(&(threads[i].splitPoints[j].lock));
-  }
+		for (int j = 0; j < MAX_ACTIVE_SPLIT_POINTS; j++)
+			lock_destroy(&(threads[i].splitPoints[j].lock));
+	}
 
-  lock_destroy(&threadsLock);
+	lock_destroy(&threadsLock);
 }
 
 
@@ -244,13 +244,13 @@ void ThreadsManager::exit() {
 
 bool ThreadsManager::available_slave_exists(int master) const {
 
-  assert(master >= 0 && master < activeThreads);
+	assert(master >= 0 && master < activeThreads);
 
-  for (int i = 0; i < activeThreads; i++)
-      if (i != master && threads[i].is_available_to(master))
-          return true;
+	for (int i = 0; i < activeThreads; i++)
+		if (i != master && threads[i].is_available_to(master))
+			return true;
 
-  return false;
+	return false;
 }
 
 
@@ -265,103 +265,103 @@ bool ThreadsManager::available_slave_exists(int master) const {
 
 template <bool Fake>
 Value ThreadsManager::split(Position& pos, SearchStack* ss, Value alpha, Value beta,
-                            Value bestValue, Depth depth, Move threatMove,
-                            int moveCount, MovePicker* mp, int nodeType) {
-  assert(pos.is_ok());
-  assert(bestValue >= -VALUE_INFINITE);
-  assert(bestValue <= alpha);
-  assert(alpha < beta);
-  assert(beta <= VALUE_INFINITE);
-  assert(depth > DEPTH_ZERO);
-  assert(pos.thread() >= 0 && pos.thread() < activeThreads);
-  assert(activeThreads > 1);
+	                          Value bestValue, Depth depth, Move threatMove,
+	                          int moveCount, MovePicker* mp, int nodeType) {
+	assert(pos.is_ok());
+	assert(bestValue >= -VALUE_INFINITE);
+	assert(bestValue <= alpha);
+	assert(alpha < beta);
+	assert(beta <= VALUE_INFINITE);
+	assert(depth > DEPTH_ZERO);
+	assert(pos.thread() >= 0 && pos.thread() < activeThreads);
+	assert(activeThreads > 1);
 
-  int i, master = pos.thread();
-  Thread& masterThread = threads[master];
+	int i, master = pos.thread();
+	Thread& masterThread = threads[master];
 
-  // If we already have too many active split points, don't split
-  if (masterThread.activeSplitPoints >= MAX_ACTIVE_SPLIT_POINTS)
-      return bestValue;
+	// If we already have too many active split points, don't split
+	if (masterThread.activeSplitPoints >= MAX_ACTIVE_SPLIT_POINTS)
+		return bestValue;
 
-  // Pick the next available split point object from the split point stack
-  SplitPoint* sp = masterThread.splitPoints + masterThread.activeSplitPoints;
+	// Pick the next available split point object from the split point stack
+	SplitPoint* sp = masterThread.splitPoints + masterThread.activeSplitPoints;
 
-  // Initialize the split point object
-  sp->parent = masterThread.splitPoint;
-  sp->master = master;
-  sp->is_betaCutoff = false;
-  sp->depth = depth;
-  sp->threatMove = threatMove;
-  sp->alpha = alpha;
-  sp->beta = beta;
-  sp->nodeType = nodeType;
-  sp->bestValue = bestValue;
-  sp->mp = mp;
-  sp->moveCount = moveCount;
-  sp->pos = &pos;
-  sp->nodes = 0;
-  sp->ss = ss;
-  for (i = 0; i < activeThreads; i++)
-      sp->is_slave[i] = false;
+	// Initialize the split point object
+	sp->parent = masterThread.splitPoint;
+	sp->master = master;
+	sp->is_betaCutoff = false;
+	sp->depth = depth;
+	sp->threatMove = threatMove;
+	sp->alpha = alpha;
+	sp->beta = beta;
+	sp->nodeType = nodeType;
+	sp->bestValue = bestValue;
+	sp->mp = mp;
+	sp->moveCount = moveCount;
+	sp->pos = &pos;
+	sp->nodes = 0;
+	sp->ss = ss;
+	for (i = 0; i < activeThreads; i++)
+		sp->is_slave[i] = false;
 
-  // If we are here it means we are not available
-  assert(masterThread.is_searching);
+	// If we are here it means we are not available
+	assert(masterThread.is_searching);
 
-  int workersCnt = 1; // At least the master is included
+	int workersCnt = 1; // At least the master is included
 
-  // Try to allocate available threads and ask them to start searching setting
-  // the state to Thread::WORKISWAITING, this must be done under lock protection
-  // to avoid concurrent allocation of the same slave by another master.
-  lock_grab(&threadsLock);
+	// Try to allocate available threads and ask them to start searching setting
+	// the state to Thread::WORKISWAITING, this must be done under lock protection
+	// to avoid concurrent allocation of the same slave by another master.
+	lock_grab(&threadsLock);
 
-  for (i = 0; !Fake && i < activeThreads && workersCnt < maxThreadsPerSplitPoint; i++)
-      if (i != master && threads[i].is_available_to(master))
-      {
-          workersCnt++;
-          sp->is_slave[i] = true;
-          threads[i].splitPoint = sp;
+	for (i = 0; !Fake && i < activeThreads && workersCnt < maxThreadsPerSplitPoint; i++)
+		if (i != master && threads[i].is_available_to(master))
+		{
+			workersCnt++;
+			sp->is_slave[i] = true;
+			threads[i].splitPoint = sp;
 
-          // This makes the slave to exit from idle_loop()
-          threads[i].is_searching = true;
+			// This makes the slave to exit from idle_loop()
+			threads[i].is_searching = true;
 
-          if (useSleepingThreads)
-              threads[i].wake_up();
-      }
+			if (useSleepingThreads)
+				threads[i].wake_up();
+		}
 
-  lock_release(&threadsLock);
+	lock_release(&threadsLock);
 
-  // We failed to allocate even one slave, return
-  if (!Fake && workersCnt == 1)
-      return bestValue;
+	// We failed to allocate even one slave, return
+	if (!Fake && workersCnt == 1)
+		return bestValue;
 
-  masterThread.splitPoint = sp;
-  masterThread.activeSplitPoints++;
+	masterThread.splitPoint = sp;
+	masterThread.activeSplitPoints++;
 
-  // Everything is set up. The master thread enters the idle loop, from which
-  // it will instantly launch a search, because its is_searching flag is set.
-  // We pass the split point as a parameter to the idle loop, which means that
-  // the thread will return from the idle loop when all slaves have finished
-  // their work at this split point.
-  masterThread.idle_loop(sp);
+	// Everything is set up. The master thread enters the idle loop, from which
+	// it will instantly launch a search, because its is_searching flag is set.
+	// We pass the split point as a parameter to the idle loop, which means that
+	// the thread will return from the idle loop when all slaves have finished
+	// their work at this split point.
+	masterThread.idle_loop(sp);
 
-  // In helpful master concept a master can help only a sub-tree, and
-  // because here is all finished is not possible master is booked.
-  assert(!masterThread.is_searching);
+	// In helpful master concept a master can help only a sub-tree, and
+	// because here is all finished is not possible master is booked.
+	assert(!masterThread.is_searching);
 
-  // We have returned from the idle loop, which means that all threads are
-  // finished. Note that changing state and decreasing activeSplitPoints is done
-  // under lock protection to avoid a race with Thread::is_available_to().
-  lock_grab(&threadsLock);
+	// We have returned from the idle loop, which means that all threads are
+	// finished. Note that changing state and decreasing activeSplitPoints is done
+	// under lock protection to avoid a race with Thread::is_available_to().
+	lock_grab(&threadsLock);
 
-  masterThread.is_searching = true;
-  masterThread.activeSplitPoints--;
+	masterThread.is_searching = true;
+	masterThread.activeSplitPoints--;
 
-  lock_release(&threadsLock);
+	lock_release(&threadsLock);
 
-  masterThread.splitPoint = sp->parent;
-  pos.set_nodes_searched(pos.nodes_searched() + sp->nodes);
+	masterThread.splitPoint = sp->parent;
+	pos.set_nodes_searched(pos.nodes_searched() + sp->nodes);
 
-  return sp->bestValue;
+	return sp->bestValue;
 }
 
 // Explicit template instantiations

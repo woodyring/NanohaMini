@@ -38,30 +38,30 @@ struct SearchStack;
 
 class MovePicker {
 
-  MovePicker& operator=(const MovePicker&); // Silence a warning under MSVC
+	MovePicker& operator=(const MovePicker&); // Silence a warning under MSVC
 
 public:
-  MovePicker(const Position&, Move, Depth, const History&, SearchStack*, Value);
-  MovePicker(const Position&, Move, Depth, const History&, Square recaptureSq);
-  MovePicker(const Position&, Move, const History&, PieceType parentCapture);
-  Move get_next_move();
+	MovePicker(const Position&, Move, Depth, const History&, SearchStack*, Value);
+	MovePicker(const Position&, Move, Depth, const History&, Square recaptureSq);
+	MovePicker(const Position&, Move, const History&, PieceType parentCapture);
+	Move get_next_move();
 
 private:
-  void score_captures();
-  void score_noncaptures();
-  void score_evasions();
-  void go_next_phase();
+	void score_captures();
+	void score_noncaptures();
+	void score_evasions();
+	void go_next_phase();
 
-  const Position& pos;
-  const History& H;
-  Depth depth;
-  Move ttMove;
-  MoveStack killers[2];
-  Square recaptureSquare;
-  int captureThreshold, phase;
-  const uint8_t* phasePtr;
-  MoveStack *curMove, *lastMove, *lastNonCapture, *badCaptures;
-  MoveStack moves[MAX_MOVES];
+	const Position& pos;
+	const History& H;
+	Depth depth;
+	Move ttMove;
+	MoveStack killers[2];
+	Square recaptureSquare;
+	int captureThreshold, phase;
+	const uint8_t* phasePtr;
+	MoveStack *curMove, *lastMove, *lastNonCapture, *badCaptures;
+	MoveStack moves[MAX_MOVES];
 };
 
 #endif // !defined(MOVEPICK_H_INCLUDED)

@@ -122,20 +122,20 @@ typedef unsigned __int64 uint64_t;
 #elif defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__))
 inline void __cpuid(int CPUInfo[4], int InfoType)
 {
-  int* eax = CPUInfo + 0;
-  int* ebx = CPUInfo + 1;
-  int* ecx = CPUInfo + 2;
-  int* edx = CPUInfo + 3;
+	int* eax = CPUInfo + 0;
+	int* ebx = CPUInfo + 1;
+	int* ecx = CPUInfo + 2;
+	int* edx = CPUInfo + 3;
 
-  *eax = InfoType;
-  *ecx = 0;
-  __asm__("cpuid" : "=a" (*eax), "=b" (*ebx), "=c" (*ecx), "=d" (*edx)
-                  : "0" (*eax), "2" (*ecx));
+	*eax = InfoType;
+	*ecx = 0;
+	__asm__("cpuid" : "=a" (*eax), "=b" (*ebx), "=c" (*ecx), "=d" (*edx)
+	                : "0" (*eax), "2" (*ecx));
 }
 #else
 inline void __cpuid(int CPUInfo[4], int)
 {
-   CPUInfo[0] = CPUInfo[1] = CPUInfo[2] = CPUInfo[3] = 0;
+	CPUInfo[0] = CPUInfo[1] = CPUInfo[2] = CPUInfo[3] = 0;
 }
 #endif
 
@@ -151,9 +151,9 @@ inline void __cpuid(int CPUInfo[4], int)
 /// cpu_has_popcnt() detects support for popcnt instruction at runtime
 inline bool cpu_has_popcnt() {
 
-  int CPUInfo[4] = {-1};
-  __cpuid(CPUInfo, 0x00000001);
-  return (CPUInfo[2] >> 23) & 1;
+	int CPUInfo[4] = {-1};
+	__cpuid(CPUInfo, 0x00000001);
+	return (CPUInfo[2] >> 23) & 1;
 }
 
 /// CpuHasPOPCNT is a global constant initialized at startup that
@@ -190,25 +190,25 @@ const int PLY_MAX_PLUS_2 = PLY_MAX + 4;		// ñºëOÇ∆àÍívÇµÇ»Ç¢Ç™ÅA+4Ç…Ç∑ÇÈ(+2ÇæÇ∆î
 #endif
 
 enum ValueType {
-  VALUE_TYPE_NONE  = 0,
-  VALUE_TYPE_UPPER = 1,
-  VALUE_TYPE_LOWER = 2,
-  VALUE_TYPE_EXACT = VALUE_TYPE_UPPER | VALUE_TYPE_LOWER
+	VALUE_TYPE_NONE  = 0,
+	VALUE_TYPE_UPPER = 1,
+	VALUE_TYPE_LOWER = 2,
+	VALUE_TYPE_EXACT = VALUE_TYPE_UPPER | VALUE_TYPE_LOWER
 };
 
 enum Value {
-  VALUE_ZERO      = 0,
-  VALUE_DRAW      = 0,
-  VALUE_KNOWN_WIN = 15000,
-  VALUE_MATE      = 30000,
-  VALUE_INFINITE  = 30001,
-  VALUE_NONE      = 30002,
+	VALUE_ZERO      = 0,
+	VALUE_DRAW      = 0,
+	VALUE_KNOWN_WIN = 15000,
+	VALUE_MATE      = 30000,
+	VALUE_INFINITE  = 30001,
+	VALUE_NONE      = 30002,
 
-  VALUE_MATE_IN_PLY_MAX  =  VALUE_MATE - PLY_MAX,
-  VALUE_MATED_IN_PLY_MAX = -VALUE_MATE + PLY_MAX,
+	VALUE_MATE_IN_PLY_MAX  =  VALUE_MATE - PLY_MAX,
+	VALUE_MATED_IN_PLY_MAX = -VALUE_MATE + PLY_MAX,
 
-  VALUE_ENSURE_INTEGER_SIZE_P = INT_MAX,
-  VALUE_ENSURE_INTEGER_SIZE_N = INT_MIN
+	VALUE_ENSURE_INTEGER_SIZE_P = INT_MAX,
+	VALUE_ENSURE_INTEGER_SIZE_N = INT_MIN
 };
 
 #if defined(NANOHA)
@@ -279,7 +279,7 @@ enum Piece {
 };
 
 enum Color {
-  BLACK, WHITE, COLOR_NONE
+	BLACK, WHITE, COLOR_NONE
 };
 
 typedef uint8_t PieceKind_t;       // ãÓéÌóﬁ
@@ -389,15 +389,15 @@ struct Hand {
 	uint32_t h;
 	static const uint32_t tbl[HI+1];
 /*
-  xxxxxxxx xxxxxxxx xxxxxxxx xxx11111  ï‡
-  xxxxxxxx xxxxxxxx xxxxx111 xxxxxxxx  çÅ
-  xxxxxxxx xxxxxxxx x111xxxx xxxxxxxx  åj
-  xxxxxxxx xxxxx111 xxxxxxxx xxxxxxxx  ã‚
-  xxxxxxxx x111xxxx xxxxxxxx xxxxxxxx  ã‡
-  xxxxxx11 xxxxxxxx xxxxxxxx xxxxxxxx  äp
-  xx11xxxx xxxxxxxx xxxxxxxx xxxxxxxx  îÚ
-  Ç±ÇÃÇÊÇ§Ç…íËã`Ç∑ÇÈÇ∆16êiêîÇ≈ï\é¶ÇµÇΩÇ∆Ç´Ç…Ç«ÇÃãÓÇâΩñáéùÇ¡ÇƒÇ¢ÇÈÇ©ÇÌÇ©ÇËÇ‚Ç∑Ç¢ÅB
-  ó·ÅjîÚÅAã‡ÅAåjÇäe1ñáÅAï‡Ç8ñáéùÇ¡ÇƒÇ¢ÇÈÇ∆Ç´ÇÕ 0x10101008 Ç∆Ç»ÇÈ
+	xxxxxxxx xxxxxxxx xxxxxxxx xxx11111  ï‡
+	xxxxxxxx xxxxxxxx xxxxx111 xxxxxxxx  çÅ
+	xxxxxxxx xxxxxxxx x111xxxx xxxxxxxx  åj
+	xxxxxxxx xxxxx111 xxxxxxxx xxxxxxxx  ã‚
+	xxxxxxxx x111xxxx xxxxxxxx xxxxxxxx  ã‡
+	xxxxxx11 xxxxxxxx xxxxxxxx xxxxxxxx  äp
+	xx11xxxx xxxxxxxx xxxxxxxx xxxxxxxx  îÚ
+	Ç±ÇÃÇÊÇ§Ç…íËã`Ç∑ÇÈÇ∆16êiêîÇ≈ï\é¶ÇµÇΩÇ∆Ç´Ç…Ç«ÇÃãÓÇâΩñáéùÇ¡ÇƒÇ¢ÇÈÇ©ÇÌÇ©ÇËÇ‚Ç∑Ç¢ÅB
+	ó·ÅjîÚÅAã‡ÅAåjÇäe1ñáÅAï‡Ç8ñáéùÇ¡ÇƒÇ¢ÇÈÇ∆Ç´ÇÕ 0x10101008 Ç∆Ç»ÇÈ
  */
 #define HAND_FU_SHIFT	 0
 #define HAND_KY_SHIFT	 8
@@ -454,108 +454,108 @@ struct Hand {
 
 #else
 enum PieceType {
-  PIECE_TYPE_NONE = 0,
-  PAWN = 1, KNIGHT = 2, BISHOP = 3, ROOK = 4, QUEEN = 5, KING = 6
+	PIECE_TYPE_NONE = 0,
+	PAWN = 1, KNIGHT = 2, BISHOP = 3, ROOK = 4, QUEEN = 5, KING = 6
 };
 
 enum Piece {
-  PIECE_NONE_DARK_SQ = 0, WP = 1, WN = 2, WB = 3, WR = 4, WQ = 5, WK = 6,
-  BP = 9, BN = 10, BB = 11, BR = 12, BQ = 13, BK = 14, PIECE_NONE = 16
+	PIECE_NONE_DARK_SQ = 0, WP = 1, WN = 2, WB = 3, WR = 4, WQ = 5, WK = 6,
+	BP = 9, BN = 10, BB = 11, BR = 12, BQ = 13, BK = 14, PIECE_NONE = 16
 };
 
 enum Color {
-  WHITE, BLACK, COLOR_NONE
+	WHITE, BLACK, COLOR_NONE
 };
 #endif
 
 enum Depth {
 
-  ONE_PLY = 2,
+	ONE_PLY = 2,
 
-  DEPTH_ZERO          =  0 * ONE_PLY,
-  DEPTH_QS_CHECKS     = -1 * ONE_PLY,
-  DEPTH_QS_NO_CHECKS  = -2 * ONE_PLY,
-  DEPTH_QS_RECAPTURES = -4 * ONE_PLY,
+	DEPTH_ZERO          =  0 * ONE_PLY,
+	DEPTH_QS_CHECKS     = -1 * ONE_PLY,
+	DEPTH_QS_NO_CHECKS  = -2 * ONE_PLY,
+	DEPTH_QS_RECAPTURES = -4 * ONE_PLY,
 
-  DEPTH_NONE = -127 * ONE_PLY
+	DEPTH_NONE = -127 * ONE_PLY
 };
 
 #if defined(NANOHA)
 enum Square {
-  SQ_A1 = 0x11, SQ_A2, SQ_A3, SQ_A4, SQ_A5, SQ_A6, SQ_A7, SQ_A8, SQ_A9,
-  SQ_B1 = 0x21, SQ_B2, SQ_B3, SQ_B4, SQ_B5, SQ_B6, SQ_B7, SQ_B8, SQ_B9,
-  SQ_C1 = 0x31, SQ_C2, SQ_C3, SQ_C4, SQ_C5, SQ_C6, SQ_C7, SQ_C8, SQ_C9,
-  SQ_D1 = 0x41, SQ_D2, SQ_D3, SQ_D4, SQ_D5, SQ_D6, SQ_D7, SQ_D8, SQ_D9,
-  SQ_E1 = 0x51, SQ_E2, SQ_E3, SQ_E4, SQ_E5, SQ_E6, SQ_E7, SQ_E8, SQ_E9,
-  SQ_F1 = 0x61, SQ_F2, SQ_F3, SQ_F4, SQ_F5, SQ_F6, SQ_F7, SQ_F8, SQ_F9,
-  SQ_G1 = 0x71, SQ_G2, SQ_G3, SQ_G4, SQ_G5, SQ_G6, SQ_G7, SQ_G8, SQ_G9,
-  SQ_H1 = 0x81, SQ_H2, SQ_H3, SQ_H4, SQ_H5, SQ_H6, SQ_H7, SQ_H8, SQ_H9,
-  SQ_I1 = 0x91, SQ_I2, SQ_I3, SQ_I4, SQ_I5, SQ_I6, SQ_I7, SQ_I8, SQ_I9,
-  SQ_NONE
+	SQ_A1 = 0x11, SQ_A2, SQ_A3, SQ_A4, SQ_A5, SQ_A6, SQ_A7, SQ_A8, SQ_A9,
+	SQ_B1 = 0x21, SQ_B2, SQ_B3, SQ_B4, SQ_B5, SQ_B6, SQ_B7, SQ_B8, SQ_B9,
+	SQ_C1 = 0x31, SQ_C2, SQ_C3, SQ_C4, SQ_C5, SQ_C6, SQ_C7, SQ_C8, SQ_C9,
+	SQ_D1 = 0x41, SQ_D2, SQ_D3, SQ_D4, SQ_D5, SQ_D6, SQ_D7, SQ_D8, SQ_D9,
+	SQ_E1 = 0x51, SQ_E2, SQ_E3, SQ_E4, SQ_E5, SQ_E6, SQ_E7, SQ_E8, SQ_E9,
+	SQ_F1 = 0x61, SQ_F2, SQ_F3, SQ_F4, SQ_F5, SQ_F6, SQ_F7, SQ_F8, SQ_F9,
+	SQ_G1 = 0x71, SQ_G2, SQ_G3, SQ_G4, SQ_G5, SQ_G6, SQ_G7, SQ_G8, SQ_G9,
+	SQ_H1 = 0x81, SQ_H2, SQ_H3, SQ_H4, SQ_H5, SQ_H6, SQ_H7, SQ_H8, SQ_H9,
+	SQ_I1 = 0x91, SQ_I2, SQ_I3, SQ_I4, SQ_I5, SQ_I6, SQ_I7, SQ_I8, SQ_I9,
+	SQ_NONE
 };
 #else
 enum Square {
-  SQ_A1, SQ_B1, SQ_C1, SQ_D1, SQ_E1, SQ_F1, SQ_G1, SQ_H1,
-  SQ_A2, SQ_B2, SQ_C2, SQ_D2, SQ_E2, SQ_F2, SQ_G2, SQ_H2,
-  SQ_A3, SQ_B3, SQ_C3, SQ_D3, SQ_E3, SQ_F3, SQ_G3, SQ_H3,
-  SQ_A4, SQ_B4, SQ_C4, SQ_D4, SQ_E4, SQ_F4, SQ_G4, SQ_H4,
-  SQ_A5, SQ_B5, SQ_C5, SQ_D5, SQ_E5, SQ_F5, SQ_G5, SQ_H5,
-  SQ_A6, SQ_B6, SQ_C6, SQ_D6, SQ_E6, SQ_F6, SQ_G6, SQ_H6,
-  SQ_A7, SQ_B7, SQ_C7, SQ_D7, SQ_E7, SQ_F7, SQ_G7, SQ_H7,
-  SQ_A8, SQ_B8, SQ_C8, SQ_D8, SQ_E8, SQ_F8, SQ_G8, SQ_H8,
-  SQ_NONE,
+	SQ_A1, SQ_B1, SQ_C1, SQ_D1, SQ_E1, SQ_F1, SQ_G1, SQ_H1,
+	SQ_A2, SQ_B2, SQ_C2, SQ_D2, SQ_E2, SQ_F2, SQ_G2, SQ_H2,
+	SQ_A3, SQ_B3, SQ_C3, SQ_D3, SQ_E3, SQ_F3, SQ_G3, SQ_H3,
+	SQ_A4, SQ_B4, SQ_C4, SQ_D4, SQ_E4, SQ_F4, SQ_G4, SQ_H4,
+	SQ_A5, SQ_B5, SQ_C5, SQ_D5, SQ_E5, SQ_F5, SQ_G5, SQ_H5,
+	SQ_A6, SQ_B6, SQ_C6, SQ_D6, SQ_E6, SQ_F6, SQ_G6, SQ_H6,
+	SQ_A7, SQ_B7, SQ_C7, SQ_D7, SQ_E7, SQ_F7, SQ_G7, SQ_H7,
+	SQ_A8, SQ_B8, SQ_C8, SQ_D8, SQ_E8, SQ_F8, SQ_G8, SQ_H8,
+	SQ_NONE,
 
-  DELTA_N =  8,
-  DELTA_E =  1,
-  DELTA_S = -8,
-  DELTA_W = -1,
+	DELTA_N =  8,
+	DELTA_E =  1,
+	DELTA_S = -8,
+	DELTA_W = -1,
 
-  DELTA_NN = DELTA_N + DELTA_N,
-  DELTA_NE = DELTA_N + DELTA_E,
-  DELTA_SE = DELTA_S + DELTA_E,
-  DELTA_SS = DELTA_S + DELTA_S,
-  DELTA_SW = DELTA_S + DELTA_W,
-  DELTA_NW = DELTA_N + DELTA_W
+	DELTA_NN = DELTA_N + DELTA_N,
+	DELTA_NE = DELTA_N + DELTA_E,
+	DELTA_SE = DELTA_S + DELTA_E,
+	DELTA_SS = DELTA_S + DELTA_S,
+	DELTA_SW = DELTA_S + DELTA_W,
+	DELTA_NW = DELTA_N + DELTA_W
 };
 #endif
 
 enum File {
 #if defined(NANOHA)
-  FILE_0, FILE_1, FILE_2, FILE_3, FILE_4, FILE_5, FILE_6, FILE_7, FILE_8, FILE_9
+	FILE_0, FILE_1, FILE_2, FILE_3, FILE_4, FILE_5, FILE_6, FILE_7, FILE_8, FILE_9
 #else
-  FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H
+	FILE_A, FILE_B, FILE_C, FILE_D, FILE_E, FILE_F, FILE_G, FILE_H
 #endif
 };
 
 enum Rank {
 #if defined(NANOHA)
-  RANK_0, RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8, RANK_9
+	RANK_0, RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8, RANK_9
 #else
-  RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8
+	RANK_1, RANK_2, RANK_3, RANK_4, RANK_5, RANK_6, RANK_7, RANK_8
 #endif
 };
 
 #if !defined(NANOHA)
 enum SquareColor {
-  DARK, LIGHT
+	DARK, LIGHT
 };
 #endif
 
 enum ScaleFactor {
-  SCALE_FACTOR_ZERO   = 0,
-  SCALE_FACTOR_NORMAL = 64,
-  SCALE_FACTOR_MAX    = 128,
-  SCALE_FACTOR_NONE   = 255
+	SCALE_FACTOR_ZERO   = 0,
+	SCALE_FACTOR_NORMAL = 64,
+	SCALE_FACTOR_MAX    = 128,
+	SCALE_FACTOR_NONE   = 255
 };
 
 #if !defined(NANOHA)
 enum CastleRight {
-  CASTLES_NONE = 0,
-  WHITE_OO     = 1,
-  BLACK_OO     = 2,
-  WHITE_OOO    = 4,
-  BLACK_OOO    = 8,
-  ALL_CASTLES  = 15
+	CASTLES_NONE = 0,
+	WHITE_OO     = 1,
+	BLACK_OO     = 2,
+	WHITE_OOO    = 4,
+	BLACK_OOO    = 8,
+	ALL_CASTLES  = 15
 };
 #endif
 
@@ -565,9 +565,9 @@ enum CastleRight {
 /// is free to choose the enum type as long as can keep its data,
 /// so ensure Score to be an integer type.
 enum Score {
-    SCORE_ZERO = 0,
-    SCORE_ENSURE_INTEGER_SIZE_P = INT_MAX,
-    SCORE_ENSURE_INTEGER_SIZE_N = INT_MIN
+	SCORE_ZERO = 0,
+	SCORE_ENSURE_INTEGER_SIZE_P = INT_MAX,
+	SCORE_ENSURE_INTEGER_SIZE_N = INT_MIN
 };
 
 #define ENABLE_OPERATORS_ON(T) \
@@ -656,164 +656,164 @@ extern int SquareDistance[64][64];
 #endif
 
 inline Value piece_value_midgame(Piece p) {
-  return PieceValueMidgame[p];
+	return PieceValueMidgame[p];
 }
 
 inline Value piece_value_endgame(Piece p) {
-  return PieceValueEndgame[p];
+	return PieceValueEndgame[p];
 }
 
 inline Value value_mate_in(int ply) {
-  return VALUE_MATE - ply;
+	return VALUE_MATE - ply;
 }
 
 inline Value value_mated_in(int ply) {
-  return -VALUE_MATE + ply;
+	return -VALUE_MATE + ply;
 }
 
 inline Piece make_piece(Color c, PieceType pt) {
 #if defined(NANOHA)
-  return (c == BLACK) ? Piece(int(pt)) : Piece(GOTE | int(pt));
+	return (c == BLACK) ? Piece(int(pt)) : Piece(GOTE | int(pt));
 #else
-  return Piece((c << 3) | pt);
+	return Piece((c << 3) | pt);
 #endif
 }
 
 inline PieceType type_of(Piece p)  {
 #if defined(NANOHA)
-  return PieceType(int(p) & 0x0F);
+	return PieceType(int(p) & 0x0F);
 #else
-  return PieceType(p & 7);
+	return PieceType(p & 7);
 #endif
 }
 
 inline Color color_of(Piece p) {
 #if defined(NANOHA)
-  return (int(p) & GOTE) ? WHITE : BLACK;
+	return (int(p) & GOTE) ? WHITE : BLACK;
 #else
-  return Color(p >> 3);
+	return Color(p >> 3);
 #endif
 }
 
 inline Color flip(Color c) {
-  return Color(c ^ 1);
+	return Color(c ^ 1);
 }
 
 inline Square make_square(File f, Rank r) {
 #if defined(NANOHA)
-  return Square((int(f) << 4) | int(r));
+	return Square((int(f) << 4) | int(r));
 #else
-  return Square((r << 3) | f);
+	return Square((r << 3) | f);
 #endif
 }
 
 inline bool square_is_ok(Square s) {
 #if defined(NANOHA)
-  return s >= SQ_A1 && s <= SQ_I9;
+	return s >= SQ_A1 && s <= SQ_I9;
 #else
-  return s >= SQ_A1 && s <= SQ_H8;
+	return s >= SQ_A1 && s <= SQ_H8;
 #endif
 }
 
 inline File file_of(Square s) {
 #if defined(NANOHA)
-  return File(int(s) >> 4);
+	return File(int(s) >> 4);
 #else
-  return File(s & 7);
+	return File(s & 7);
 #endif
 }
 
 inline Rank rank_of(Square s) {
 #if defined(NANOHA)
-  return Rank(int(s) & 0x0F);
+	return Rank(int(s) & 0x0F);
 #else
-  return Rank(s >> 3);
+	return Rank(s >> 3);
 #endif
 }
 
 inline Square flip(Square s) {
 #if defined(NANOHA)
-  return Square(0xAA - int(s));
+	return Square(0xAA - int(s));
 #else
-  return Square(s ^ 56);
+	return Square(s ^ 56);
 #endif
 }
 
 inline Square mirror(Square s) {
 #if defined(NANOHA)
-  int s2 = int(s);
-  int f = s2 & 0x0F;
-  int r = s2 & 0xF0;
-  return Square(int(0xA0 - r + f));
+	int s2 = int(s);
+	int f = s2 & 0x0F;
+	int r = s2 & 0xF0;
+	return Square(int(0xA0 - r + f));
 #else
-  return Square(s ^ 7);
+	return Square(s ^ 7);
 #endif
 }
 
 #ifndef NANOHA
 inline Square relative_square(Color c, Square s) {
-  return Square(s ^ (c * 56));
+	return Square(s ^ (c * 56));
 }
 
 inline Rank relative_rank(Color c, Rank r) {
-  return Rank(r ^ (c * 7));
+	return Rank(r ^ (c * 7));
 }
 
 inline Rank relative_rank(Color c, Square s) {
-  return relative_rank(c, rank_of(s));
+	return relative_rank(c, rank_of(s));
 }
 #endif
 
 #if !defined(NANOHA)
 inline SquareColor color_of(Square s) {
-  return SquareColor(int(rank_of(s) + s) & 1);
+	return SquareColor(int(rank_of(s) + s) & 1);
 }
 
 inline bool opposite_colors(Square s1, Square s2) {
-  int s = s1 ^ s2;
-  return ((s >> 3) ^ s) & 1;
+	int s = s1 ^ s2;
+	return ((s >> 3) ^ s) & 1;
 }
 
 inline int file_distance(Square s1, Square s2) {
-  return abs(file_of(s1) - file_of(s2));
+	return abs(file_of(s1) - file_of(s2));
 }
 
 inline int rank_distance(Square s1, Square s2) {
-  return abs(rank_of(s1) - rank_of(s2));
+	return abs(rank_of(s1) - rank_of(s2));
 }
 
 inline int square_distance(Square s1, Square s2) {
-  return SquareDistance[s1][s2];
+	return SquareDistance[s1][s2];
 }
 #endif
 
 #if !defined(NANOHA)
 inline char piece_type_to_char(PieceType pt) {
-  return " PNBRQK"[pt];
+	return " PNBRQK"[pt];
 }
 #endif
 
 
 inline char file_to_char(File f) {
 #if defined(NANOHA)
-  return char(f - FILE_1 + int('a'));
+	return char(f - FILE_1 + int('a'));
 #else
-  return char(f - FILE_A + int('a'));
+	return char(f - FILE_A + int('a'));
 #endif
 }
 
 inline char rank_to_char(Rank r) {
-  return char(r - RANK_1 + int('1'));
+	return char(r - RANK_1 + int('1'));
 }
 
 inline const std::string square_to_string(Square s) {
-  char ch[] = { file_to_char(file_of(s)), rank_to_char(rank_of(s)), 0 };
-  return ch;
+	char ch[] = { file_to_char(file_of(s)), rank_to_char(rank_of(s)), 0 };
+	return ch;
 }
 
 #ifndef NANOHA
 inline Square pawn_push(Color c) {
-  return c == WHITE ? DELTA_N : DELTA_S;
+	return c == WHITE ? DELTA_N : DELTA_S;
 }
 #endif
 

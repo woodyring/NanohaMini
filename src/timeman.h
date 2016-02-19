@@ -26,15 +26,15 @@ struct SearchLimits;
 class TimeManager {
 public:
 
-  void init(const SearchLimits& limits, int currentPly);
-  void pv_instability(int curChanges, int prevChanges);
-  int available_time() const { return optimumSearchTime + unstablePVExtraTime; }
-  int maximum_time() const { return maximumSearchTime; }
+	void init(const SearchLimits& limits, int currentPly);
+	void pv_instability(int curChanges, int prevChanges);
+	int available_time() const { return optimumSearchTime + unstablePVExtraTime; }
+	int maximum_time() const { return maximumSearchTime; }
 
 private:
-  int optimumSearchTime;
-  int maximumSearchTime;
-  int unstablePVExtraTime;
+	int optimumSearchTime;
+	int maximumSearchTime;
+	int unstablePVExtraTime;
 };
 
 #endif // !defined(TIMEMAN_H_INCLUDED)

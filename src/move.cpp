@@ -63,13 +63,13 @@ namespace {
 #if defined(__GNUC__)
 	// 8C5C はCodePage932(シフトJIS)での文字コードなので、文字コードを変更する場合は要変更.
 	static const char *piece_ja_str[] = {
-	  "　", "歩", "香", "桂",       "銀", "金", "角", "飛", 
-	  "玉", "と", "杏", "\x8C\x5C", "全", "〓", "馬", "龍",
+		"　", "歩", "香", "桂",       "銀", "金", "角", "飛", 
+		"玉", "と", "杏", "\x8C\x5C", "全", "〓", "馬", "龍",
 	};
 #else
 	static const char *piece_ja_str[] = {
-	  "　", "歩", "香", "桂", "銀", "金", "角", "飛", 
-	  "玉", "と", "杏", "圭", "全", "〓", "馬", "龍", 
+		"　", "歩", "香", "桂", "銀", "金", "角", "飛", 
+		"玉", "と", "杏", "圭", "全", "〓", "馬", "龍", 
 	};
 #endif
 };
@@ -153,21 +153,21 @@ const std::string move_to_kif(Move m)
 	// "24歩打　　"	；駒打ち
 	// "(null)　　"	；MOVE_NULL
 	if (m == MOVE_NULL) {
-	    // 駒打ち
-	    strcpy(buf, "(null)　　");
+		// 駒打ち
+		strcpy(buf, "(null)　　");
 	}else if (move_is_drop(m)) {
-	    // 駒打ち
-	    sprintf(buf, "%02x%s打　　", to, piece_ja_str[p]);
-    } else {
-        // 移動
-        if (is_promotion(m)) {
-		    sprintf(buf, "%02x%s成(%02x)", to, piece_ja_str[p], from);
-        } else {
-		    sprintf(buf, "%02x%s(%02x)　", to, piece_ja_str[p], from);
-        }
-    }
+		// 駒打ち
+		sprintf(buf, "%02x%s打　　", to, piece_ja_str[p]);
+	} else {
+		// 移動
+		if (is_promotion(m)) {
+			sprintf(buf, "%02x%s成(%02x)", to, piece_ja_str[p], from);
+		} else {
+			sprintf(buf, "%02x%s(%02x)　", to, piece_ja_str[p], from);
+		}
+	}
 	string str = buf;
-    return str;
+	return str;
 }
 
 void move_fprint(FILE *fp, Move m, int rotate)
@@ -229,23 +229,23 @@ void move_fprint(FILE *fp, Move m, int rotate)
 #else
 const string move_to_uci(Move m, bool chess960) {
 
-  Square from = move_from(m);
-  Square to = move_to(m);
-  string promotion;
+	Square from = move_from(m);
+	Square to = move_to(m);
+	string promotion;
 
-  if (m == MOVE_NONE)
-      return "(none)";
+	if (m == MOVE_NONE)
+		return "(none)";
 
-  if (m == MOVE_NULL)
-      return "0000";
+	if (m == MOVE_NULL)
+		return "0000";
 
-  if (is_castle(m) && !chess960)
-      to = from + (file_of(to) == FILE_H ? Square(2) : -Square(2));
+	if (is_castle(m) && !chess960)
+		to = from + (file_of(to) == FILE_H ? Square(2) : -Square(2));
 
-  if (is_promotion(m))
-      promotion = char(tolower(piece_type_to_char(promotion_piece_type(m))));
+	if (is_promotion(m))
+		promotion = char(tolower(piece_type_to_char(promotion_piece_type(m))));
 
-  return square_to_string(from) + square_to_string(to) + promotion;
+	return square_to_string(from) + square_to_string(to) + promotion;
 }
 #endif
 
@@ -257,17 +257,17 @@ const string move_to_uci(Move m, bool chess960) {
 Move move_from_uci(const Position& pos, const string& str) {
 
 #if defined(NANOHA)
-  for (MoveList<MV_LEGAL> ml(pos); !ml.end(); ++ml)
-      if (str == move_to_uci(ml.move()))
-          return ml.move();
+	for (MoveList<MV_LEGAL> ml(pos); !ml.end(); ++ml)
+		if (str == move_to_uci(ml.move()))
+			return ml.move();
 
-  return MOVE_NONE;
+	return MOVE_NONE;
 #else
-  for (MoveList<MV_LEGAL> ml(pos); !ml.end(); ++ml)
-      if (str == move_to_uci(ml.move(), pos.is_chess960()))
-          return ml.move();
+	for (MoveList<MV_LEGAL> ml(pos); !ml.end(); ++ml)
+		if (str == move_to_uci(ml.move(), pos.is_chess960()))
+			return ml.move();
 
-  return MOVE_NONE;
+	return MOVE_NONE;
 #endif
 }
 
@@ -283,84 +283,84 @@ const string move_to_san(Position& pos, Move m) {
 #else
 const string move_to_san(Position& pos, Move m) {
 
-  if (m == MOVE_NONE)
-      return "(none)";
+	if (m == MOVE_NONE)
+		return "(none)";
 
-  if (m == MOVE_NULL)
-      return "(null)";
+	if (m == MOVE_NULL)
+		return "(null)";
 
-  assert(is_ok(m));
+	assert(is_ok(m));
 
-  Bitboard attackers;
-  bool ambiguousMove, ambiguousFile, ambiguousRank;
-  Square sq, from = move_from(m);
-  Square to = move_to(m);
-  PieceType pt = type_of(pos.piece_on(from));
-  string san;
+	Bitboard attackers;
+	bool ambiguousMove, ambiguousFile, ambiguousRank;
+	Square sq, from = move_from(m);
+	Square to = move_to(m);
+	PieceType pt = type_of(pos.piece_on(from));
+	string san;
 
-  if (is_castle(m))
-      san = (move_to(m) < move_from(m) ? "O-O-O" : "O-O");
-  else
-  {
-      if (pt != PAWN)
-      {
-          san = piece_type_to_char(pt);
+	if (is_castle(m))
+		san = (move_to(m) < move_from(m) ? "O-O-O" : "O-O");
+	else
+	{
+		if (pt != PAWN)
+		{
+			san = piece_type_to_char(pt);
 
-          // Disambiguation if we have more then one piece with destination 'to'
-          // note that for pawns is not needed because starting file is explicit.
-          attackers = pos.attackers_to(to) & pos.pieces(pt, pos.side_to_move());
-          clear_bit(&attackers, from);
-          ambiguousMove = ambiguousFile = ambiguousRank = false;
+			// Disambiguation if we have more then one piece with destination 'to'
+			// note that for pawns is not needed because starting file is explicit.
+			attackers = pos.attackers_to(to) & pos.pieces(pt, pos.side_to_move());
+			clear_bit(&attackers, from);
+			ambiguousMove = ambiguousFile = ambiguousRank = false;
 
-          while (attackers)
-          {
-              sq = pop_1st_bit(&attackers);
+			while (attackers)
+			{
+				sq = pop_1st_bit(&attackers);
 
-              if (file_of(sq) == file_of(from))
-                  ambiguousFile = true;
+				if (file_of(sq) == file_of(from))
+					ambiguousFile = true;
 
-              if (rank_of(sq) == rank_of(from))
-                  ambiguousRank = true;
+				if (rank_of(sq) == rank_of(from))
+					ambiguousRank = true;
 
-              ambiguousMove = true;
-          }
+				ambiguousMove = true;
+			}
 
-          if (ambiguousMove)
-          {
-              if (!ambiguousFile)
-                  san += file_to_char(file_of(from));
-              else if (!ambiguousRank)
-                  san += rank_to_char(rank_of(from));
-              else
-                  san += square_to_string(from);
-          }
-      }
+			if (ambiguousMove)
+			{
+				if (!ambiguousFile)
+					san += file_to_char(file_of(from));
+				else if (!ambiguousRank)
+					san += rank_to_char(rank_of(from));
+				else
+					san += square_to_string(from);
+			}
+		}
 
-      if (pos.is_capture(m))
-      {
-          if (pt == PAWN)
-              san += file_to_char(file_of(from));
+		if (pos.is_capture(m))
+		{
+			if (pt == PAWN)
+				san += file_to_char(file_of(from));
 
-          san += 'x';
-      }
+			san += 'x';
+		}
 
-      san += square_to_string(to);
+		san += square_to_string(to);
 
-      if (is_promotion(m))
-      {
-          san += '=';
-          san += piece_type_to_char(promotion_piece_type(m));
-      }
-  }
+		if (is_promotion(m))
+		{
+			san += '=';
+			san += piece_type_to_char(promotion_piece_type(m));
+		}
+	}
 
-  // The move gives check? We don't use pos.move_gives_check() here
-  // because we need to test for a mate after the move is done.
-  StateInfo st;
-  pos.do_move(m, st);
-  if (pos.in_check())
-      san += pos.is_mate() ? "#" : "+";
-  pos.undo_move(m);
+	// The move gives check? We don't use pos.move_gives_check() here
+	// because we need to test for a mate after the move is done.
+	StateInfo st;
+	pos.do_move(m, st);
+	if (pos.in_check())
+		san += pos.is_mate() ? "#" : "+";
+	pos.undo_move(m);
 
-  return san;
+	return san;
 }
 #endif

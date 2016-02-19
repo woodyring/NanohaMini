@@ -1,5 +1,23 @@
+#
+# なのはminiにするときはNANOHAMINI=1の前の#を取り、
+# なのはmicroにするときはNANOHAMINI=1の前に#を付け、NANOHAMICRO=1の前の#を取る
+#
+NANOHAMINI=1
+#NANOHAMICRO=1
+
+!IFDEF NANOHAMINI
+EVAL_TYPE=EVAL_OLD
 EXE = nanohamini.exe
-#EXE = nanohamicro.exe
+PGD = nanohamini.pgd
+PGOLOG = nanohamini_prof.txt
+!ELSEIFDEF NANOHAMICRO
+EVAL_TYPE=EVAL_MICRO
+EXE = nanohamicro.exe
+PGD = nanohamicro.pgd
+PGOLOG = nanohamicro_prof.txt
+!ELSE
+!ERROR undefined eval_type
+!ENDIF
 
 OBJS = mate1ply.obj misc.obj timeman.obj evaluate.obj position.obj \
 	 tt.obj main.obj move.obj \
@@ -29,12 +47,14 @@ LD=link
 # /RTCs             スタック フレーム ランタイム チェック
 # /RTCu             初期化されていないローカル変数のチェック
 
-FLAGS = -DNDEBUG -DEVAL_OLD -DNANOHA -DCHK_PERFORM  \
+FLAGS = -DNDEBUG -D$(EVAL_TYPE) -DNANOHA -DCHK_PERFORM  \
 	-DOLD_LOCKS /favor:AMD64 /EHsc /D_CRT_SECURE_NO_WARNINGS \
 	 /GL /Zc:forScope
 #CXXFLAGS=$(FLAGS) /MT /W4 /Wall /nologo /Od /GS /RTCsu
 CXXFLAGS=$(FLAGS) /MD /W3 /nologo /Ox /Ob2 /GS- /Gm /Zi
-LDFLAGS=/NOLOGO /STACK:16777216,32768 /out:$(EXE) /LTCG
+LDFLAGS=/NOLOGO /STACK:16777216,32768 /out:$(EXE) /LTCG /DEBUG
+PGOLDFLAGS1=/NOLOGO /STACK:16777216,32768 /out:$(EXE) /LTCG:PGI
+PGOLDFLAGS2=/NOLOGO /STACK:16777216,32768 /out:$(EXE) /LTCG:PGO
 
 
 all: $(EXE)
@@ -49,4 +69,21 @@ clean :
 	del /q *.obj
 	del /q *.idb
 	del /q *.pdb
-	del /q $(EXE)
+	del /q *.pgc
+	del /q *.pgd
+	del /q *.suo
+	del    $(PGOLOG)
+	del    $(EXE)
+
+pgo: $(OBJS)
+	$(LD) $(PGOLDFLAGS1) $(OBJS) User32.lib
+	$(EXE) bench 128 2 9
+	pgomgr /merge $(PGD)
+	pgomgr /summary $(PGD) > $(PGOLOG)
+	$(LD) $(PGOLDFLAGS2) $(OBJS) User32.lib
+
+prof-clean:
+	del /q *.pgc
+	del /q *.pgd
+	del    $(PGOLOG)
+	del    $(EXE)

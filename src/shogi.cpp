@@ -780,66 +780,66 @@ void Position::del_effect(const int z, const Piece kind)
 
 void Position::do_move(Move m, StateInfo& newSt)
 {
-  assert(is_ok());
-  assert(&newSt != st);
-  assert(!at_checking());
+	assert(is_ok());
+	assert(&newSt != st);
+	assert(!at_checking());
 #if defined(MOVE_TRACE)
 	m_trace[st->gamePly] = m;
 	assert(m != MOVE_NULL);	// NullMoveはdo_null_move()で処理する
 #endif
 
-  nodes++;
-  Key key = st->key;
+	nodes++;
+	Key key = st->key;
 
-  // Copy some fields of old state to our new StateInfo object except the
-  // ones which are recalculated from scratch anyway, then switch our state
-  // pointer to point to the new, ready to be updated, state.
-/// ※ position.cpp の struct StateInfo と定義を合わせる
-  struct ReducedStateInfo {
-    int gamePly;
-    int pliesFromNull;
-	Piece captured;
-	uint32_t hand;
-	uint32_t effect;
-	Key key;
-  };
+	// Copy some fields of old state to our new StateInfo object except the
+	// ones which are recalculated from scratch anyway, then switch our state
+	// pointer to point to the new, ready to be updated, state.
+	/// ※ position.cpp の struct StateInfo と定義を合わせる
+	struct ReducedStateInfo {
+		int gamePly;
+		int pliesFromNull;
+		Piece captured;
+		uint32_t hand;
+		uint32_t effect;
+		Key key;
+	};
 
-  memcpy(&newSt, st, sizeof(ReducedStateInfo));
+	memcpy(&newSt, st, sizeof(ReducedStateInfo));
 
-  newSt.previous = st;
-  st = &newSt;
+	newSt.previous = st;
+	st = &newSt;
 
-  // Update side to move
-  key ^= zobSideToMove;
+	// Update side to move
+	key ^= zobSideToMove;
 
-  // Increment the 50 moves rule draw counter. Resetting it to zero in the
-  // case of non-reversible moves is taken care of later.
-  st->pliesFromNull++;
+	// Increment the 50 moves rule draw counter. Resetting it to zero in the
+	// case of non-reversible moves is taken care of later.
+	st->pliesFromNull++;
 
-  const Color us = side_to_move();
-  if (move_is_drop(m))
-  {
-	st->key = key;
-      do_drop(m);
-      st->hand = hand[us].h;
-      st->effect = (us == BLACK) ? effectB[kingG] : effectW[kingS];
-	  assert(!at_checking());
-	assert(get_key() == compute_key());
-      return;
-  }
+	const Color us = side_to_move();
+	if (move_is_drop(m))
+	{
+		st->key = key;
+		do_drop(m);
+		st->hand = hand[us].h;
+		st->effect = (us == BLACK) ? effectB[kingG] : effectW[kingS];
+		assert(!at_checking());
+		assert(get_key() == compute_key());
+		return;
+	}
 
-  const Square from = move_from(m);
-  const Square to = move_to(m);
-  bool pm = is_promotion(m);
+	const Square from = move_from(m);
+	const Square to = move_to(m);
+	bool pm = is_promotion(m);
 
-  Piece piece = piece_on(from);
-  Piece capture = piece_on(to);
+	Piece piece = piece_on(from);
+	Piece capture = piece_on(to);
 	int kn;
 	unsigned long id;
 	unsigned long tkiki;
 
-  assert(color_of_piece_on(from) == us);
-  assert(color_of(piece_on(to)) == them || square_is_empty(to));
+	assert(color_of_piece_on(from) == us);
+	assert(color_of(piece_on(to)) == them || square_is_empty(to));
 
 	// ピン情報のクリア
 	if (piece == SOU) {
@@ -973,10 +973,10 @@ void Position::do_move(Move m, StateInfo& newSt)
 	// ハッシュ更新
 	key ^= zobrist[ban[from]][from] ^ zobrist[piece][to];
 
-  // Prefetch TT access as soon as we know key is updated
-  prefetch(reinterpret_cast<char*>(TT.first_entry(key)));
+	// Prefetch TT access as soon as we know key is updated
+	prefetch(reinterpret_cast<char*>(TT.first_entry(key)));
 
-  // Move the piece
+	// Move the piece
 
 	ban[to]   = piece;
 	ban[from] = EMP;
@@ -1058,25 +1058,25 @@ void Position::do_move(Move m, StateInfo& newSt)
 		}
 	}
 
-  // Set capture piece
-  st->captured = capture;
+	// Set capture piece
+	st->captured = capture;
 
-  // Update the key with the final value
-  st->key = key;
-  st->hand = hand[us].h;
-  st->effect = (us == BLACK) ? effectB[kingG] : effectW[kingS];
+	// Update the key with the final value
+	st->key = key;
+	st->hand = hand[us].h;
+	st->effect = (us == BLACK) ? effectB[kingG] : effectW[kingS];
 
 #if !defined(NDEBUG)
-  // 手を指したあとに、王手になっている⇒自殺手になっている
-  if (in_check()) {
-	print_csa(m);
-	disp_trace(st->gamePly + 1);
-	MYABORT();
-  }
+	// 手を指したあとに、王手になっている⇒自殺手になっている
+	if (in_check()) {
+		print_csa(m);
+		disp_trace(st->gamePly + 1);
+		MYABORT();
+	}
 #endif
 
-  // Finish
-  sideToMove = flip(sideToMove);
+	// Finish
+	sideToMove = flip(sideToMove);
 
 #if defined(MOVE_TRACE)
 	int fail;
@@ -1085,19 +1085,19 @@ void Position::do_move(Move m, StateInfo& newSt)
 		print_csa(m);
 	}
 #else
-  assert(is_ok());
+	assert(is_ok());
 #endif
 	assert(get_key() == compute_key());
 }
 
 void Position::do_drop(Move m)
 {
-  const Color us = side_to_move();
-  const Square to = move_to(m);
+	const Color us = side_to_move();
+	const Square to = move_to(m);
 
-  assert(square_is_empty(to));
+	assert(square_is_empty(to));
 
-  Piece piece = move_piece(m);
+	Piece piece = move_piece(m);
 	int kn = 0x80;
 	int kne = 0;
 	unsigned long id;
@@ -1216,19 +1216,19 @@ void Position::do_drop(Move m)
 		AddPinInfG(NanohaTbl::Direction[id]);
 	}
 
-  // Set capture piece
-  st->captured = EMP;
+	// Set capture piece
+	st->captured = EMP;
 
-  // Update the key with the final value
-  st->key ^= zobrist[piece][to];
+	// Update the key with the final value
+	st->key ^= zobrist[piece][to];
 
-  // Prefetch TT access as soon as we know key is updated
-  prefetch(reinterpret_cast<char*>(TT.first_entry(st->key)));
+	// Prefetch TT access as soon as we know key is updated
+	prefetch(reinterpret_cast<char*>(TT.first_entry(st->key)));
 
-  // Finish
-  sideToMove = flip(sideToMove);
+	// Finish
+	sideToMove = flip(sideToMove);
 
-  assert(is_ok());
+	assert(is_ok());
 }
 
 /// Position::undo_move() unmakes a move. When it returns, the position should
@@ -1244,30 +1244,30 @@ void Position::undo_move(Move m) {
 		MYABORT();
 	}
 #else
-  assert(is_ok());
+	assert(is_ok());
 #endif
-  assert(move_is_ok(m));
+	assert(move_is_ok(m));
 
-  sideToMove = flip(sideToMove);
+	sideToMove = flip(sideToMove);
 
-  if (move_is_drop(m))
-  {
-      undo_drop(m);
-      return;
-  }
+	if (move_is_drop(m))
+	{
+		undo_drop(m);
+		return;
+	}
 
-  Color us = side_to_move();
-  Square from = move_from(m);
-  Square to = move_to(m);
-  bool pm = is_promotion(m);
+	Color us = side_to_move();
+	Square from = move_from(m);
+	Square to = move_to(m);
+	bool pm = is_promotion(m);
 	Piece piece = move_piece(m);
 	Piece captured = st->captured;
 	int kn;
 	unsigned long id;
 	unsigned long tkiki;
 
-  assert(square_is_empty(from));
-  assert(color_of_piece_on(to) == us);
+	assert(square_is_empty(from));
+	assert(color_of_piece_on(to) == us);
 
 	// ピン情報のクリア
 	if (piece == SOU) {
@@ -1534,23 +1534,23 @@ void Position::undo_move(Move m) {
 		}
 	}
 
-  // Finally point our state pointer back to the previous state
-  st = st->previous;
+	// Finally point our state pointer back to the previous state
+	st = st->previous;
 
-  assert(is_ok());
+	assert(is_ok());
 }
 
 void Position::undo_drop(Move m)
 {
-  Color us = side_to_move();
-  Square to = move_to(m);
+	Color us = side_to_move();
+	Square to = move_to(m);
 	Piece piece = move_piece(m);
 	int kn = 0x80;
 	int kne = 0;
 	unsigned long id;
 	unsigned long tkiki;
 
-  assert(color_of_piece_on(to) == us);
+	assert(color_of_piece_on(to) == us);
 
 	// 移動元、移動先が玉の延長線上にあったときにそこのピン情報を削除する
 	if (EFFECT_KING_S(to)) {
@@ -1657,10 +1657,10 @@ void Position::undo_drop(Move m)
 	if (us == BLACK) handS.h += diff;
 	else             handG.h += diff;
 
-  // Finally point our state pointer back to the previous state
-  st = st->previous;
+	// Finally point our state pointer back to the previous state
+	st = st->previous;
 
-  assert(is_ok());
+	assert(is_ok());
 }
 
 // 手を進めずにハッシュ計算のみ行う

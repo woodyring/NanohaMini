@@ -24,13 +24,13 @@
 #include "move.h"
 
 enum MoveType {
-  MV_CAPTURE,			// 駒を取る手
-  MV_NON_CAPTURE,		// 駒を取らない手
-  MV_CHECK,				// 王手
-  MV_NON_CAPTURE_CHECK,	// 駒を取らない王手
-  MV_EVASION,			// 王手回避手
-  MV_NON_EVASION,		// 王手がかかっていない時の合法手生成
-  MV_LEGAL				// 合法手生成
+	MV_CAPTURE,             // 駒を取る手
+	MV_NON_CAPTURE,         // 駒を取らない手
+	MV_CHECK,               // 王手
+	MV_NON_CAPTURE_CHECK,   // 駒を取らない王手
+	MV_EVASION,             // 王手回避手
+	MV_NON_EVASION,         // 王手がかかっていない時の合法手生成
+	MV_LEGAL                // 合法手生成
 };
 
 template<MoveType>
@@ -41,15 +41,15 @@ MoveStack* generate(const Position& pos, MoveStack* mlist);
 template<MoveType T>
 struct MoveList {
 
-  explicit MoveList(const Position& pos) : cur(mlist), last(generate<T>(pos, mlist)) {}
-  void operator++() { cur++; }
-  bool end() const { return cur == last; }
-  Move move() const { return cur->move; }
-  int size() const { return int(last - mlist); }
+	explicit MoveList(const Position& pos) : cur(mlist), last(generate<T>(pos, mlist)) {}
+	void operator++() { cur++; }
+	bool end() const { return cur == last; }
+	Move move() const { return cur->move; }
+	int size() const { return int(last - mlist); }
 
 private:
-  MoveStack mlist[MAX_MOVES];
-  MoveStack *cur, *last;
+	MoveStack mlist[MAX_MOVES];
+	MoveStack *cur, *last;
 };
 
 #endif // !defined(MOVEGEN_H_INCLUDED)

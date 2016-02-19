@@ -42,28 +42,28 @@ const int MAX_ACTIVE_SPLIT_POINTS = 8;
 
 struct SplitPoint {
 
-  // Const data after splitPoint has been setup
-  SplitPoint* parent;
-  const Position* pos;
-  Depth depth;
-  Value beta;
-  int nodeType;
-  int ply;
-  int master;
-  Move threatMove;
+	// Const data after splitPoint has been setup
+	SplitPoint* parent;
+	const Position* pos;
+	Depth depth;
+	Value beta;
+	int nodeType;
+	int ply;
+	int master;
+	Move threatMove;
 
-  // Const pointers to shared data
-  MovePicker* mp;
-  SearchStack* ss;
+	// Const pointers to shared data
+	MovePicker* mp;
+	SearchStack* ss;
 
-  // Shared data
-  Lock lock;
-  volatile int64_t nodes;
-  volatile Value alpha;
-  volatile Value bestValue;
-  volatile int moveCount;
-  volatile bool is_betaCutoff;
-  volatile bool is_slave[MAX_THREADS];
+	// Shared data
+	Lock lock;
+	volatile int64_t nodes;
+	volatile Value alpha;
+	volatile Value bestValue;
+	volatile int moveCount;
+	volatile bool is_betaCutoff;
+	volatile bool is_slave[MAX_THREADS];
 };
 
 
@@ -74,30 +74,30 @@ struct SplitPoint {
 
 struct Thread {
 
-  void wake_up();
-  bool cutoff_occurred() const;
-  bool is_available_to(int master) const;
-  void idle_loop(SplitPoint* sp);
+	void wake_up();
+	bool cutoff_occurred() const;
+	bool is_available_to(int master) const;
+	void idle_loop(SplitPoint* sp);
 
-  SplitPoint splitPoints[MAX_ACTIVE_SPLIT_POINTS];
+	SplitPoint splitPoints[MAX_ACTIVE_SPLIT_POINTS];
 #if !defined(NANOHA)
-  MaterialInfoTable materialTable;
-  PawnInfoTable pawnTable;
+	MaterialInfoTable materialTable;
+	PawnInfoTable pawnTable;
 #endif
-  int threadID;
-  int maxPly;
-  Lock sleepLock;
-  WaitCondition sleepCond;
-  SplitPoint* volatile splitPoint;
-  volatile int activeSplitPoints;
-  volatile bool is_searching;
-  volatile bool do_sleep;
-  volatile bool do_terminate;
+	int threadID;
+	int maxPly;
+	Lock sleepLock;
+	WaitCondition sleepCond;
+	SplitPoint* volatile splitPoint;
+	volatile int activeSplitPoints;
+	volatile bool is_searching;
+	volatile bool do_sleep;
+	volatile bool do_terminate;
 
 #if defined(_MSC_VER)
-  HANDLE handle;
+	HANDLE handle;
 #else
-  pthread_t handle;
+	pthread_t handle;
 #endif
 };
 
@@ -107,33 +107,33 @@ struct Thread {
 /// point. All the access to shared thread data is done through this class.
 
 class ThreadsManager {
-  /* As long as the single ThreadsManager object is defined as a global we don't
-     need to explicitly initialize to zero its data members because variables with
-     static storage duration are automatically set to zero before enter main()
-  */
+	/* As long as the single ThreadsManager object is defined as a global we don't
+	   need to explicitly initialize to zero its data members because variables with
+	   static storage duration are automatically set to zero before enter main()
+	*/
 public:
-  Thread& operator[](int threadID) { return threads[threadID]; }
-  void init();
-  void exit();
+	Thread& operator[](int threadID) { return threads[threadID]; }
+	void init();
+	void exit();
 
-  bool use_sleeping_threads() const { return useSleepingThreads; }
-  int min_split_depth() const { return minimumSplitDepth; }
-  int size() const { return activeThreads; }
+	bool use_sleeping_threads() const { return useSleepingThreads; }
+	int min_split_depth() const { return minimumSplitDepth; }
+	int size() const { return activeThreads; }
 
-  void set_size(int cnt);
-  void read_uci_options();
-  bool available_slave_exists(int master) const;
+	void set_size(int cnt);
+	void read_uci_options();
+	bool available_slave_exists(int master) const;
 
-  template <bool Fake>
-  Value split(Position& pos, SearchStack* ss, Value alpha, Value beta, Value bestValue,
-              Depth depth, Move threatMove, int moveCount, MovePicker* mp, int nodeType);
+	template <bool Fake>
+	Value split(Position& pos, SearchStack* ss, Value alpha, Value beta, Value bestValue,
+	            Depth depth, Move threatMove, int moveCount, MovePicker* mp, int nodeType);
 private:
-  Thread threads[MAX_THREADS];
-  Lock threadsLock;
-  Depth minimumSplitDepth;
-  int maxThreadsPerSplitPoint;
-  int activeThreads;
-  bool useSleepingThreads;
+	Thread threads[MAX_THREADS];
+	Lock threadsLock;
+	Depth minimumSplitDepth;
+	int maxThreadsPerSplitPoint;
+	int activeThreads;
+	bool useSleepingThreads;
 };
 
 extern ThreadsManager Threads;

@@ -1,7 +1,7 @@
 ==================================================
 【 ソフト名 】なのはminiのソース
-【バージョン】0.2.1
-【  作成日  】2014/12/23
+【バージョン】0.2.1.1
+【  作成日  】2014/12/26
 【  製作者  】かず＠なのは(川端一之)
 ==================================================
 
@@ -15,6 +15,7 @@
 　　・定跡データを減らしました。
 　　・上記の差分によりたいぶ弱くなっています。
 
+
 ■コンパイル方法
 　・Visual Studio Community 2013 で確認しています。
 
@@ -22,8 +23,10 @@
   2. VS2013 x86 Native tools Command Prompt (または VS2013 x86 Native tools Command Prompt)を起動しいます。
   3. 展開したところにカレントディレクトリを移動します。
   4. nmake -f Makefile.vs とすれば、コンパイルできます。
+     (nmake -f Makefile.vs pgo とすれば、PGOが効いてより高速になると思います)
 
   ※Cygwin でも make とすれば、コンパイルできると思います。
+
 
 ■同梱ファイル
 　・Copying.txt
@@ -33,6 +36,7 @@
 　・src ディレクトリ以下のファイル
 　　なのはminiのソースファイルおよびmakefileです。
 
+
 ■使用条件および免責等
 　・GPLに従います。詳細は同梱のCopying.txtを参照してください。
 　  ⇒この配布がライセンスを守っていないところがあればご指摘ください。
@@ -41,6 +45,7 @@
 　・なのはminiを再配布するときは、GPLに従って行ってください。 
 　・バグは内在していると思いますので、ご指摘いただければありがたいです。
 　  (なるべくやさしくお願いします)
+
 
 ■支援等
 　もし、このソフトを気に入って支援をしていただける方がおられましたら、アマゾン
@@ -52,12 +57,14 @@
   欲しいもの： http://www.amazon.co.jp/registry/wishlist/2UMG7J5WTXP3D/
   ブログ： http://vivio.blog.shinobi.jp/
 
+
 ■謝辞
 　・ベースとなったStockfish開発者Marco Costalba, Joona Kiiski, Tord Romstadに感
 　　謝します。
 　・なのはminiの開発にあたって gpsfish を参考にしました。TeamGPS各位に感謝します。
 　・Woodyさんのブログ記事もとても参考にしています。
 　・れさぴょんも参考にしています。開発者の池さんに感謝します。
+
 
 ■参考文献
 ・小谷善行、他:「コンピュータ将棋」, サイエンス社, 1990.
@@ -73,6 +80,7 @@
 ・岸本章宏:「IS 将棋の詰将棋解答プログラムについて」, http://www.is.titech.ac.jp/~kishi/pdf_file/csa.pdf, 2004.
 ・橋本剛, 上田徹, 橋本隼一:「オセロ求解へ向けた取り組み」, http://www.lab2.kuis.kyoto-u.ac.jp/~itohiro/Games/Game080307.html
 
+
 ■参考web
 ・千里の道も一歩から: http://woodyring.blog.so-net.ne.jp/
 ・小宮日記: http://d.hatena.ne.jp/mkomiya/
@@ -82,3 +90,8 @@
 ・Bonanzaソース完全解析ブログ: http://d.hatena.ne.jp/LS3600/
 ・aki.の日記: http://d.hatena.ne.jp/ak11/
 ・FPGA で将棋プログラムを作ってみるブログ: http://blog.livedoor.jp/yss_fpga/
+
+
+■履歴
+2014/12/26 Ver.0.2.1.1   致命的バグ修正、PGO対応、インデント統一
+2014/12/23 Ver.0.2.1     初版

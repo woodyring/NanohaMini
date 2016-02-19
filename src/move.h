@@ -43,8 +43,8 @@ const int MAX_MOVES = 256;
   11111xxx xxxxxxxx xxxxxxxx xxxxxxxx  5bit(bit27-31) Žè‚ÌŽí—Þ
  */
 enum Move {
-  MOVE_NONE = 0,
-  MOVE_NULL = 0xFFF00001		// from != to‚Æ‚È‚é‚æ‚¤‚É’è‹`
+	MOVE_NONE = 0,
+	MOVE_NULL = 0xFFF00001		// from != to‚Æ‚È‚é‚æ‚¤‚É’è‹`
 };
 #define To2Move(to)             (static_cast<unsigned int>(to)   <<  0)
 #define TO_MASK                 0xFFU
@@ -77,15 +77,15 @@ enum Move {
 /// origin and destination square, 0 and 1 respectively.
 
 enum Move {
-  MOVE_NONE = 0,
-  MOVE_NULL = 65
+	MOVE_NONE = 0,
+	MOVE_NULL = 65
 };
 #endif
 
 
 struct MoveStack {
-  Move move;
-  int score;
+	Move move;
+	int score;
 };
 
 inline bool operator<(const MoveStack& f, const MoveStack& s) { return f.score < s.score; }
@@ -94,28 +94,28 @@ inline bool operator<(const MoveStack& f, const MoveStack& s) { return f.score <
 template<typename T, typename K>
 inline void sort(K firstMove, K lastMove)
 {
-    T value;
-    K cur, p, d;
+	T value;
+	K cur, p, d;
 
-    if (firstMove != lastMove)
-        for (cur = firstMove + 1; cur != lastMove; cur++)
-        {
-            p = d = cur;
-            value = *p--;
-            if (*p < value)
-            {
-                do *d = *p;
-                while (--d != firstMove && *--p < value);
-                *d = value;
-            }
-        }
+	if (firstMove != lastMove)
+		for (cur = firstMove + 1; cur != lastMove; cur++)
+		{
+			p = d = cur;
+			value = *p--;
+			if (*p < value)
+			{
+				do *d = *p;
+				while (--d != firstMove && *--p < value);
+				*d = value;
+			}
+		}
 }
 
 inline Square move_from(Move m) {
 #if defined(NANOHA)
 	return Square(U2From(static_cast<unsigned int>(m)));
 #else
-  return Square((m >> 6) & 0x3F);
+	return Square((m >> 6) & 0x3F);
 #endif
 }
 
@@ -123,7 +123,7 @@ inline Square move_to(Move m) {
 #if defined(NANOHA)
 	return Square(U2To(static_cast<unsigned int>(m)));
 #else
-  return Square(m & 0x3F);
+	return Square(m & 0x3F);
 #endif
 }
 
@@ -139,7 +139,7 @@ inline bool move_is_drop(Move m) {
 }
 
 inline bool is_special(Move) {
-  return false;
+	return false;
 }
 
 inline Piece move_captured(Move m) {
@@ -168,7 +168,7 @@ inline Move cons_move(const int from, const int to, const Piece piece, const Pie
 
 #else
 inline bool is_special(Move m) {
-  return m & (3 << 14);
+	return m & (3 << 14);
 }
 #endif
 
@@ -176,60 +176,60 @@ inline bool is_promotion(Move m) {
 #if defined(NANOHA)
 	return (static_cast<unsigned int>(m) & FLAG_PROMO)!=0;
 #else
-  return (m & (3 << 14)) == (1 << 14);
+	return (m & (3 << 14)) == (1 << 14);
 #endif
 }
 
 #if defined(NANOHA)
 inline int is_enpassant(Move) {
-  return false;
+	return false;
 }
 #else
 inline int is_enpassant(Move m) {
-  return (m & (3 << 14)) == (2 << 14);
+	return (m & (3 << 14)) == (2 << 14);
 }
 #endif
 
 #if defined(NANOHA)
 inline int is_castle(Move) {
-  return false;
+	return false;
 }
 #else
 inline int is_castle(Move m) {
-  return (m & (3 << 14)) == (3 << 14);
+	return (m & (3 << 14)) == (3 << 14);
 }
 #endif
 
 #if defined(NANOHA)
 inline bool move_is_pawn_drop(Move m){
-  return move_is_drop(m) && move_ptype(m) == FU;
+	return move_is_drop(m) && move_ptype(m) == FU;
 }
 #endif
 
 #if !defined(NANOHA)
 inline PieceType promotion_piece_type(Move m) {
-  return PieceType(((m >> 12) & 3) + 2);
+	return PieceType(((m >> 12) & 3) + 2);
 }
 
 inline Move make_move(Square from, Square to) {
-  return Move(to | (from << 6));
+	return Move(to | (from << 6));
 }
 
 inline Move make_promotion_move(Square from, Square to, PieceType promotion) {
-  return Move(to | (from << 6) | (1 << 14) | ((promotion - 2) << 12)) ;
+	return Move(to | (from << 6) | (1 << 14) | ((promotion - 2) << 12)) ;
 }
 
 inline Move make_enpassant_move(Square from, Square to) {
-  return Move(to | (from << 6) | (2 << 14));
+	return Move(to | (from << 6) | (2 << 14));
 }
 
 inline Move make_castle_move(Square from, Square to) {
-  return Move(to | (from << 6) | (3 << 14));
+	return Move(to | (from << 6) | (3 << 14));
 }
 #endif
 
 inline bool is_ok(Move m) {
-  return move_from(m) != move_to(m); // Catches also MOVE_NONE
+	return move_from(m) != move_to(m); // Catches also MOVE_NONE
 }
 
 class Position;

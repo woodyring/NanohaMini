@@ -35,18 +35,18 @@ struct SplitPoint;
 /// current ply.
 
 struct SearchStack {
-  SplitPoint* sp;
-  int ply;
-  Move currentMove;
-  Move excludedMove;
-  Move bestMove;
-  Move killers[2];
-  Depth reduction;
-  Value eval;
-  Value evalMargin;
-  int skipNullMove;
+	SplitPoint* sp;
+	int ply;
+	Move currentMove;
+	Move excludedMove;
+	Move bestMove;
+	Move killers[2];
+	Depth reduction;
+	Value eval;
+	Value evalMargin;
+	int skipNullMove;
 #if defined(NANOHA)
-  bool checkmateTested;
+	bool checkmateTested;
 #endif
 };
 
@@ -57,15 +57,15 @@ struct SearchStack {
 
 struct SearchLimits {
 
-  SearchLimits() { memset(this, 0, sizeof(SearchLimits)); }
+	SearchLimits() { memset(this, 0, sizeof(SearchLimits)); }
 
-  SearchLimits(int t, int i, int mtg, int mt, int md, int mn, bool inf, bool pon)
-              : time(t), increment(i), movesToGo(mtg), maxTime(mt), maxDepth(md),
-                maxNodes(mn), infinite(inf), ponder(pon) {}
+	SearchLimits(int t, int i, int mtg, int mt, int md, int mn, bool inf, bool pon)
+	            : time(t), increment(i), movesToGo(mtg), maxTime(mt), maxDepth(md),
+	              maxNodes(mn), infinite(inf), ponder(pon) {}
 
-  bool useTimeManagement() const { return !(maxTime | maxDepth | maxNodes | infinite); }
+	bool useTimeManagement() const { return !(maxTime | maxDepth | maxNodes | infinite); }
 
-  int time, increment, movesToGo, maxTime, maxDepth, maxNodes, infinite, ponder;
+	int time, increment, movesToGo, maxTime, maxDepth, maxNodes, infinite, ponder;
 };
 
 extern void init_search();

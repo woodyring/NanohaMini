@@ -64,63 +64,63 @@ class TTEntry {
 
 public:
 #if defined(NANOHA)
-  void save(uint64_t k, uint32_t h, Value v, ValueType t, Depth d, Move m, int g, Value statV, Value statM) {
+	void save(uint64_t k, uint32_t h, Value v, ValueType t, Depth d, Move m, int g, Value statV, Value statM) {
 
-    key_depth    = (k & ~UINT64_C(0xFFFF)) | (d & 0xFFFF);
-    move32       = m;
-    hand30       = (h & 0x3FFFFFFF) | (t << 30);
-    generation16 = uint16_t(g);
-    value16      = int16_t(v);
-    staticValue  = int16_t(statV);
-    staticMargin = int16_t(statM);
-  }
-  void set_generation(int g) { generation16 = uint16_t(g); }
+		key_depth    = (k & ~UINT64_C(0xFFFF)) | (d & 0xFFFF);
+		move32       = m;
+		hand30       = (h & 0x3FFFFFFF) | (t << 30);
+		generation16 = uint16_t(g);
+		value16      = int16_t(v);
+		staticValue  = int16_t(statV);
+		staticMargin = int16_t(statM);
+	}
+	void set_generation(int g) { generation16 = uint16_t(g); }
 
-  uint64_t key() const              { return (key_depth & ~UINT64_C(0xFFFF)); }
-  uint32_t hand() const             { return (hand30 & 0x3FFFFFFF); }
-  Depth depth() const               { return Depth((int16_t)(key_depth & 0xFFFF)); }
-  Move move() const                 { return Move(move32); }
-  Value value() const               { return Value(value16); }
-  ValueType type() const            { return ValueType((hand30 >> 30) & 0x0003); }
-  int generation() const            { return int(generation16); }
-  Value static_value() const        { return Value(staticValue); }
-  Value static_value_margin() const { return Value(staticMargin); }
+	uint64_t key() const              { return (key_depth & ~UINT64_C(0xFFFF)); }
+	uint32_t hand() const             { return (hand30 & 0x3FFFFFFF); }
+	Depth depth() const               { return Depth((int16_t)(key_depth & 0xFFFF)); }
+	Move move() const                 { return Move(move32); }
+	Value value() const               { return Value(value16); }
+	ValueType type() const            { return ValueType((hand30 >> 30) & 0x0003); }
+	int generation() const            { return int(generation16); }
+	Value static_value() const        { return Value(staticValue); }
+	Value static_value_margin() const { return Value(staticMargin); }
 #else
-  void save(uint32_t k, Value v, ValueType t, Depth d, Move m, int g, Value statV, Value statM) {
+	void save(uint32_t k, Value v, ValueType t, Depth d, Move m, int g, Value statV, Value statM) {
 
-    key32        = (uint32_t)k;
-    move16       = (uint16_t)m;
-    valueType    = (uint8_t)t;
-    generation8  = (uint8_t)g;
-    value16      = (int16_t)v;
-    depth16      = (int16_t)d;
-    staticValue  = (int16_t)statV;
-    staticMargin = (int16_t)statM;
-  }
-  void set_generation(int g) { generation8 = (uint8_t)g; }
+		key32        = (uint32_t)k;
+		move16       = (uint16_t)m;
+		valueType    = (uint8_t)t;
+		generation8  = (uint8_t)g;
+		value16      = (int16_t)v;
+		depth16      = (int16_t)d;
+		staticValue  = (int16_t)statV;
+		staticMargin = (int16_t)statM;
+	}
+	void set_generation(int g) { generation8 = (uint8_t)g; }
 
-  uint32_t key() const              { return key32; }
-  Depth depth() const               { return (Depth)depth16; }
-  Move move() const                 { return (Move)move16; }
-  Value value() const               { return (Value)value16; }
-  ValueType type() const            { return (ValueType)valueType; }
-  int generation() const            { return (int)generation8; }
-  Value static_value() const        { return (Value)staticValue; }
-  Value static_value_margin() const { return (Value)staticMargin; }
+	uint32_t key() const              { return key32; }
+	Depth depth() const               { return (Depth)depth16; }
+	Move move() const                 { return (Move)move16; }
+	Value value() const               { return (Value)value16; }
+	ValueType type() const            { return (ValueType)valueType; }
+	int generation() const            { return (int)generation8; }
+	Value static_value() const        { return (Value)staticValue; }
+	Value static_value_margin() const { return (Value)staticMargin; }
 #endif
 
 private:
 #if defined(NANOHA)
-  uint64_t key_depth;
-  uint32_t hand30;
-  uint32_t move32;
-  uint16_t generation16;
-  int16_t value16, staticValue, staticMargin;
+	uint64_t key_depth;
+	uint32_t hand30;
+	uint32_t move32;
+	uint16_t generation16;
+	int16_t value16, staticValue, staticMargin;
 #else
-  uint32_t key32;
-  uint16_t move16;
-  uint8_t valueType, generation8;
-  int16_t value16, depth16, staticValue, staticMargin;
+	uint32_t key32;
+	uint16_t move16;
+	uint8_t valueType, generation8;
+	int16_t value16, depth16, staticValue, staticMargin;
 #endif
 };
 
@@ -135,7 +135,7 @@ const int ClusterSize = 4;
 /// be padded to guarantee always aligned accesses.
 
 struct TTCluster {
-  TTEntry data[ClusterSize];
+	TTEntry data[ClusterSize];
 };
 
 
@@ -144,32 +144,32 @@ struct TTCluster {
 
 class TranspositionTable {
 
-  TranspositionTable(const TranspositionTable&);
-  TranspositionTable& operator=(const TranspositionTable&);
+	TranspositionTable(const TranspositionTable&);
+	TranspositionTable& operator=(const TranspositionTable&);
 
 public:
-  TranspositionTable();
-  ~TranspositionTable();
-  void set_size(size_t mbSize);
-  void clear();
+	TranspositionTable();
+	~TranspositionTable();
+	void set_size(size_t mbSize);
+	void clear();
 #if defined(NANOHA)
-  void store(const Key posKey, uint32_t h, Value v, ValueType type, Depth d, Move m, Value statV, Value kingD);
-  TTEntry* probe(const Key posKey, uint32_t h) const;
+	void store(const Key posKey, uint32_t h, Value v, ValueType type, Depth d, Move m, Value statV, Value kingD);
+	TTEntry* probe(const Key posKey, uint32_t h) const;
 #else
-  void store(const Key posKey, Value v, ValueType type, Depth d, Move m, Value statV, Value kingD);
-  TTEntry* probe(const Key posKey) const;
+	void store(const Key posKey, Value v, ValueType type, Depth d, Move m, Value statV, Value kingD);
+	TTEntry* probe(const Key posKey) const;
 #endif
-  void new_search();
-  TTEntry* first_entry(const Key posKey) const;
-  void refresh(const TTEntry* tte) const;
+	void new_search();
+	TTEntry* first_entry(const Key posKey) const;
+	void refresh(const TTEntry* tte) const;
 
 private:
-  size_t size;
-  TTCluster* entries;
+	size_t size;
+	TTCluster* entries;
 #if defined(NANOHA)
-  uint16_t generation; // Size must be not bigger then TTEntry::generation8
+	uint16_t generation; // Size must be not bigger then TTEntry::generation8
 #else
-  uint8_t generation; // Size must be not bigger then TTEntry::generation8
+	uint8_t generation; // Size must be not bigger then TTEntry::generation8
 #endif
 };
 
@@ -182,7 +182,7 @@ extern TranspositionTable TT;
 
 inline TTEntry* TranspositionTable::first_entry(const Key posKey) const {
 
-  return entries[((uint32_t)posKey) & (size - 1)].data;
+	return entries[((uint32_t)posKey) & (size - 1)].data;
 }
 
 
@@ -191,7 +191,7 @@ inline TTEntry* TranspositionTable::first_entry(const Key posKey) const {
 
 inline void TranspositionTable::refresh(const TTEntry* tte) const {
 
-  const_cast<TTEntry*>(tte)->set_generation(generation);
+	const_cast<TTEntry*>(tte)->set_generation(generation);
 }
 
 
@@ -202,30 +202,30 @@ inline void TranspositionTable::refresh(const TTEntry* tte) const {
 template<class Entry, int HashSize>
 struct SimpleHash {
 
-  typedef SimpleHash<Entry, HashSize> Base;
+	typedef SimpleHash<Entry, HashSize> Base;
 
-  void init() {
+	void init() {
 
-    if (entries)
-        return;
+		if (entries)
+			return;
 
-    entries = new (std::nothrow) Entry[HashSize];
-    if (!entries)
-    {
-        std::cerr << "Failed to allocate " << HashSize * sizeof(Entry)
-                  << " bytes for hash table." << std::endl;
-        exit(EXIT_FAILURE);
-    }
-    memset(entries, 0, HashSize * sizeof(Entry));
-  }
+		entries = new (std::nothrow) Entry[HashSize];
+		if (!entries)
+		{
+			std::cerr << "Failed to allocate " << HashSize * sizeof(Entry)
+			          << " bytes for hash table." << std::endl;
+			exit(EXIT_FAILURE);
+		}
+		memset(entries, 0, HashSize * sizeof(Entry));
+	}
 
-  virtual ~SimpleHash() { delete [] entries; }
+	virtual ~SimpleHash() { delete [] entries; }
 
-  Entry* probe(Key key) const { return entries + ((uint32_t)key & (HashSize - 1)); }
-  void prefetch(Key key) const { ::prefetch((char*)probe(key)); }
+	Entry* probe(Key key) const { return entries + ((uint32_t)key & (HashSize - 1)); }
+	void prefetch(Key key) const { ::prefetch((char*)probe(key)); }
 
 protected:
-  Entry* entries;
+	Entry* entries;
 };
 #endif
 

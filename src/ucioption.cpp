@@ -35,18 +35,18 @@ OptionsMap Options; // Global object
 // Our case insensitive less() function as required by UCI protocol
 bool CaseInsensitiveLess::operator() (const string& s1, const string& s2) const {
 
-  int c1, c2;
-  size_t i = 0;
+	int c1, c2;
+	size_t i = 0;
 
-  while (i < s1.size() && i < s2.size())
-  {
-      c1 = tolower(s1[i]);
-      c2 = tolower(s2[i++]);
+	while (i < s1.size() && i < s2.size())
+	{
+		c1 = tolower(s1[i]);
+		c2 = tolower(s2[i++]);
 
-      if (c1 != c2)
-          return c1 < c2;
-  }
-  return s1.size() < s2.size();
+		if (c1 != c2)
+			return c1 < c2;
+	}
+	return s1.size() < s2.size();
 }
 
 
@@ -54,9 +54,9 @@ bool CaseInsensitiveLess::operator() (const string& s1, const string& s2) const 
 template<typename T>
 static string stringify(const T& v) {
 
-  std::ostringstream ss;
-  ss << v;
-  return ss.str();
+	std::ostringstream ss;
+	ss << v;
+	return ss.str();
 }
 
 
@@ -66,59 +66,60 @@ static string stringify(const T& v) {
 
 OptionsMap::OptionsMap() {
 
-  OptionsMap& o = *this;
+	OptionsMap& o = *this;
 
-  // 定跡
-  o["OwnBook"] = UCIOption(true);
-  o["RandomBookSelect"] = UCIOption(true);
+	// 定跡
+	o["OwnBook"] = UCIOption(true);
+	o["RandomBookSelect"] = UCIOption(true);
 #if defined(NANOHA)
-  o["BookFile"] = UCIOption("book_40.jsk");
+	o["BookFile"] = UCIOption("book_40.jsk");
 #else
-  o["BookFile"] = UCIOption("book.bin");
+	o["BookFile"] = UCIOption("book.bin");
 #endif
 #if defined(NANOHA)
-  o["Ponder"] = UCIOption(false);
+	o["Ponder"] = UCIOption(false);
 #else
-  o["Ponder"] = UCIOption(true);
+	o["Ponder"] = UCIOption(true);
 #endif
-  o["Threads"] = UCIOption(1, 1, MAX_THREADS);
-  o["Hash"] = UCIOption(256, 4, 1024);
+	o["Threads"] = UCIOption(1, 1, MAX_THREADS);
+	o["Hash"] = UCIOption(256, 4, 1024);
 
-  o["Use Search Log"] = UCIOption(false);
-  o["Search Log Filename"] = UCIOption("SearchLog.txt");
-  o["Minimum Split Depth"] = UCIOption(4, 4, 7);
-  o["Maximum Number of Threads per Split Point"] = UCIOption(5, 4, 8);
-  o["Use Sleeping Threads"] = UCIOption(false);
-  o["Clear Hash"] = UCIOption(false, "button");
-  o["MultiPV"] = UCIOption(1, 1, 500);
-  o["Skill Level"] = UCIOption(20, 0, 20);
+	o["Use Search Log"] = UCIOption(false);
+	o["Search Log Filename"] = UCIOption("SearchLog.txt");
+	o["Minimum Split Depth"] = UCIOption(4, 4, 7);
+	o["Maximum Number of Threads per Split Point"] = UCIOption(5, 4, 8);
+	o["Use Sleeping Threads"] = UCIOption(false);
+	o["Clear Hash"] = UCIOption(false, "button");
+	o["MultiPV"] = UCIOption(1, 1, 500);
+	o["Skill Level"] = UCIOption(20, 0, 20);
 #if defined(NANOHA)
-  // TODO: 要調整；時間制御のパラメータ
-  o["Emergency Move Horizon"] = UCIOption(50, 0, 60);
-  o["Emergency Base Time"] = UCIOption(20000, 0, 30000);
-  o["Emergency Move Time"] = UCIOption(1000, 0, 5000);
+	// TODO: 要調整；時間制御のパラメータ
+	o["Emergency Move Horizon"] = UCIOption(50, 0, 60);
+	o["Emergency Base Time"] = UCIOption(20000, 0, 30000);
+	o["Emergency Move Time"] = UCIOption(1000, 0, 5000);
 #else
-  o["Emergency Move Horizon"] = UCIOption(40, 0, 50);
-  o["Emergency Base Time"] = UCIOption(200, 0, 30000);
-  o["Emergency Move Time"] = UCIOption(70, 0, 5000);
+	o["Emergency Move Horizon"] = UCIOption(40, 0, 50);
+	o["Emergency Base Time"] = UCIOption(200, 0, 30000);
+	o["Emergency Move Time"] = UCIOption(70, 0, 5000);
 #endif
-  o["Minimum Thinking Time"] = UCIOption(20, 0, 5000);
+	o["Minimum Thinking Time"] = UCIOption(20, 0, 5000);
 #if defined(NANOHA)
-  // 引き分け(千日手)の点数
-  o["DrawValue"] = UCIOption(0, -30000, 30000);
-  o["Output_AllDepth"] = UCIOption(false);
+	// 引き分け(千日手)の点数
+	o["DrawValue"] = UCIOption(0, -30000, 30000);
+	o["Output_AllDepth"] = UCIOption(false);
+	o["ByoyomiMargin"] = UCIOption(100, 0, 3000);
 #endif
 
-  // Set some SMP parameters accordingly to the detected CPU count
-  UCIOption& thr = o["Threads"];
-  UCIOption& msd = o["Minimum Split Depth"];
+	// Set some SMP parameters accordingly to the detected CPU count
+	UCIOption& thr = o["Threads"];
+	UCIOption& msd = o["Minimum Split Depth"];
 
-  // スレッド数
-  int thr_num = Min(cpu_count(), MAX_THREADS);
-  thr.defaultValue = thr.currentValue = stringify(thr_num);
+	// スレッド数
+	int thr_num = Min(cpu_count(), MAX_THREADS);
+	thr.defaultValue = thr.currentValue = stringify(thr_num);
 
-  if (cpu_count() >= 8)
-      msd.defaultValue = msd.currentValue = stringify(7);
+	if (cpu_count() >= 8)
+		msd.defaultValue = msd.currentValue = stringify(7);
 }
 
 
@@ -127,24 +128,28 @@ OptionsMap::OptionsMap() {
 
 string OptionsMap::print_all() const {
 
-  std::stringstream s;
+	std::stringstream s;
 
-  for (size_t i = 0; i <= size(); i++)
-      for (OptionsMap::const_iterator it = begin(); it != end(); ++it)
-          if (it->second.idx == i && (it->first.find(" ") == string::npos))
-          {
-              const UCIOption& o = it->second;
-              s << "\noption name " << it->first << " type " << o.type;
+	for (size_t i = 0; i <= size(); i++)
+		for (OptionsMap::const_iterator it = begin(); it != end(); ++it)
+			if (it->second.idx == i && (it->first.find(" ") == string::npos))
+			{
+#if defined(NANOHA)
+				if (it->first == "MultiPV") continue;
+				if (it->first == "DrawValue") continue;
+#endif
+				const UCIOption& o = it->second;
+				s << "\noption name " << it->first << " type " << o.type;
 
-              if (o.type != "button")
-                  s << " default " << o.defaultValue;
+				if (o.type != "button")
+					s << " default " << o.defaultValue;
 
-              if (o.type == "spin")
-                  s << " min " << o.minValue << " max " << o.maxValue;
+				if (o.type == "spin")
+					s << " min " << o.minValue << " max " << o.maxValue;
 
-              break;
-          }
-  return s.str();
+				break;
+			}
+	return s.str();
 }
 
 
@@ -166,20 +171,20 @@ UCIOption::UCIOption(int def, int minv, int maxv) : type("spin"), minValue(minv)
 
 void UCIOption::set_value(const string& v) {
 
-  assert(!type.empty());
+	assert(!type.empty());
 
-  if (v.empty())
-      return;
+	if (v.empty())
+		return;
 
-  if ((type == "check" || type == "button") != (v == "true" || v == "false"))
-      return;
+	if ((type == "check" || type == "button") != (v == "true" || v == "false"))
+		return;
 
-  if (type == "spin")
-  {
-      int val = atoi(v.c_str());
-      if (val < minValue || val > maxValue)
-          return;
-  }
+	if (type == "spin")
+	{
+		int val = atoi(v.c_str());
+		if (val < minValue || val > maxValue)
+			return;
+	}
 
-  currentValue = v;
+	currentValue = v;
 }

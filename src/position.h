@@ -36,11 +36,11 @@
 
 struct CheckInfo {
 
-    explicit CheckInfo(const Position&);
+	explicit CheckInfo(const Position&);
 
-    Bitboard dcCandidates;
-    Bitboard pinned;
-    Bitboard checkSq[8];
+	Bitboard dcCandidates;
+	Bitboard pinned;
+	Bitboard checkSq[8];
 };
 #endif
 
@@ -64,17 +64,17 @@ struct StateInfo {
 	uint32_t effect;
 	Key key;
 #else
-  Key pawnKey, materialKey;
-  Value npMaterial[2];
-  int castleRights, rule50, pliesFromNull;
-  Score value;
-  Square epSquare;
+	Key pawnKey, materialKey;
+	Value npMaterial[2];
+	int castleRights, rule50, pliesFromNull;
+	Score value;
+	Square epSquare;
 
-  Key key;
-  Bitboard checkersBB;
-  PieceType capturedType;
+	Key key;
+	Bitboard checkersBB;
+	PieceType capturedType;
 #endif
-  StateInfo* previous;
+	StateInfo* previous;
 };
 
 #if defined(NANOHA)
@@ -106,125 +106,125 @@ extern void init_application_once();	// 実行ファイル起動時に行う初期化.
 
 class Position {
 
-  // No defaul, copy c'tor or assignment allowed, default c'tor will not be
-  // generated anyhow because of user-defined c'tors.
-  Position(const Position&);
-  Position& operator=(const Position&);
+	// No defaul, copy c'tor or assignment allowed, default c'tor will not be
+	// generated anyhow because of user-defined c'tors.
+	Position(const Position&);
+	Position& operator=(const Position&);
 
 public:
-  Position(const Position& pos, int threadID);
+	Position(const Position& pos, int threadID);
 #if defined(NANOHA)
-  Position(const std::string& fen, int threadID);
+	Position(const std::string& fen, int threadID);
 #else
-  Position(const std::string& fen, bool isChess960, int threadID);
+	Position(const std::string& fen, bool isChess960, int threadID);
 #endif
 
-  // Text input/output
+	// Text input/output
 #if defined(NANOHA)
-  void from_fen(const std::string& fen);
+	void from_fen(const std::string& fen);
 #else
-  void from_fen(const std::string& fen, bool isChess960);
+	void from_fen(const std::string& fen, bool isChess960);
 #endif
-  const std::string to_fen() const;
+	const std::string to_fen() const;
 #if defined(NANOHA)
-  void print_csa(Move m = MOVE_NONE) const;
-  void print(Move m) const;
-  void print() const {print(MOVE_NULL);}
-  bool operator == (const Position &a) const;
-  bool operator != (const Position &a) const;
+	void print_csa(Move m = MOVE_NONE) const;
+	void print(Move m) const;
+	void print() const {print(MOVE_NULL);}
+	bool operator == (const Position &a) const;
+	bool operator != (const Position &a) const;
 #else
-  void print(Move m = MOVE_NONE) const;
+	void print(Move m = MOVE_NONE) const;
 #endif
 
-  // The piece on a given square
-  Piece piece_on(Square s) const;
-  bool square_is_empty(Square s) const;
+	// The piece on a given square
+	Piece piece_on(Square s) const;
+	bool square_is_empty(Square s) const;
 #if defined(NANOHA)
-  Value type_value_of_piece_on(Square s) const;
-  Value promote_value_of_piece_on(Square s) const;
-  int pin_on(Square s) const;
+	Value type_value_of_piece_on(Square s) const;
+	Value promote_value_of_piece_on(Square s) const;
+	int pin_on(Square s) const;
 #endif
 
-  // Side to move
-  Color side_to_move() const;
+	// Side to move
+	Color side_to_move() const;
 
 #if !defined(NANOHA)
-  // Bitboard representation of the position
-  Bitboard empty_squares() const;
-  Bitboard occupied_squares() const;
-  Bitboard pieces(Color c) const;
-  Bitboard pieces(PieceType pt) const;
-  Bitboard pieces(PieceType pt, Color c) const;
-  Bitboard pieces(PieceType pt1, PieceType pt2) const;
-  Bitboard pieces(PieceType pt1, PieceType pt2, Color c) const;
+	// Bitboard representation of the position
+	Bitboard empty_squares() const;
+	Bitboard occupied_squares() const;
+	Bitboard pieces(Color c) const;
+	Bitboard pieces(PieceType pt) const;
+	Bitboard pieces(PieceType pt, Color c) const;
+	Bitboard pieces(PieceType pt1, PieceType pt2) const;
+	Bitboard pieces(PieceType pt1, PieceType pt2, Color c) const;
 
-  // Number of pieces of each color and type
-  int piece_count(Color c, PieceType pt) const;
+	// Number of pieces of each color and type
+	int piece_count(Color c, PieceType pt) const;
 
-  // The en passant square
-  Square ep_square() const;
+	// The en passant square
+	Square ep_square() const;
 #endif
 
-  // Current king position for each color
-  Square king_square(Color c) const;
+	// Current king position for each color
+	Square king_square(Color c) const;
 
 #if !defined(NANOHA)
-  // Castling rights
-  bool can_castle(CastleRight f) const;
-  bool can_castle(Color c) const;
-  Square castle_rook_square(CastleRight f) const;
+	// Castling rights
+	bool can_castle(CastleRight f) const;
+	bool can_castle(Color c) const;
+	Square castle_rook_square(CastleRight f) const;
 #endif
 
 #if !defined(NANOHA)
-  // Bitboards for pinned pieces and discovered check candidates
-  Bitboard discovered_check_candidates() const;
-  Bitboard pinned_pieces() const;
+	// Bitboards for pinned pieces and discovered check candidates
+	Bitboard discovered_check_candidates() const;
+	Bitboard pinned_pieces() const;
 
-  // Checking pieces and under check information
-  Bitboard checkers() const;
+	// Checking pieces and under check information
+	Bitboard checkers() const;
 #endif
-  bool in_check() const;
+	bool in_check() const;
 #if defined(NANOHA)
-  bool at_checking() const;	// 王手をかけている状態か？
+	bool at_checking() const;	// 王手をかけている状態か？
 #else
-  // Piece lists
-  const Square* piece_list(Color c, PieceType pt) const;
+	// Piece lists
+	const Square* piece_list(Color c, PieceType pt) const;
 
-  // Information about attacks to or from a given square
-  Bitboard attackers_to(Square s) const;
-  Bitboard attackers_to(Square s, Bitboard occ) const;
-  Bitboard attacks_from(Piece p, Square s) const;
-  static Bitboard attacks_from(Piece p, Square s, Bitboard occ);
-  template<PieceType> Bitboard attacks_from(Square s) const;
-  template<PieceType> Bitboard attacks_from(Square s, Color c) const;
+	// Information about attacks to or from a given square
+	Bitboard attackers_to(Square s) const;
+	Bitboard attackers_to(Square s, Bitboard occ) const;
+	Bitboard attacks_from(Piece p, Square s) const;
+	static Bitboard attacks_from(Piece p, Square s, Bitboard occ);
+	template<PieceType> Bitboard attacks_from(Square s) const;
+	template<PieceType> Bitboard attacks_from(Square s, Color c) const;
 #endif
 
-  // Properties of moves
+	// Properties of moves
 #if defined(NANOHA)
-  bool is_double_pawn(const Color us, int to) const;		// 二歩か？
-  bool is_pawn_drop_mate(const Color us, int to) const;	// 打ち歩詰めか？
-  bool move_gives_check(Move m) const;
-  bool move_attacks_square(Move m, Square s) const;
-  bool pl_move_is_legal(const Move m) const;
-  bool is_pseudo_legal(const Move m) const {return pl_move_is_legal(m);}
+	bool is_double_pawn(const Color us, int to) const;		// 二歩か？
+	bool is_pawn_drop_mate(const Color us, int to) const;	// 打ち歩詰めか？
+	bool move_gives_check(Move m) const;
+	bool move_attacks_square(Move m, Square s) const;
+	bool pl_move_is_legal(const Move m) const;
+	bool is_pseudo_legal(const Move m) const {return pl_move_is_legal(m);}
 #else
-  bool move_gives_check(Move m, const CheckInfo& ci) const;
-  bool move_attacks_square(Move m, Square s) const;
-  bool pl_move_is_legal(Move m, Bitboard pinned) const;
-  bool is_pseudo_legal(const Move m) const;
+	bool move_gives_check(Move m, const CheckInfo& ci) const;
+	bool move_attacks_square(Move m, Square s) const;
+	bool pl_move_is_legal(Move m, Bitboard pinned) const;
+	bool is_pseudo_legal(const Move m) const;
 #endif
-  bool is_capture(Move m) const;
-  bool is_capture_or_promotion(Move m) const;
-  bool is_passed_pawn_push(Move m) const;
+	bool is_capture(Move m) const;
+	bool is_capture_or_promotion(Move m) const;
+	bool is_passed_pawn_push(Move m) const;
 
-  // Piece captured with previous moves
-  PieceType captured_piece_type() const;
+	// Piece captured with previous moves
+	PieceType captured_piece_type() const;
 
-  // Information about pawns
-  bool pawn_is_passed(Color c, Square s) const;
+	// Information about pawns
+	bool pawn_is_passed(Color c, Square s) const;
 
-  // Doing and undoing moves
-  void do_move(Move m, StateInfo& st);
+	// Doing and undoing moves
+	void do_move(Move m, StateInfo& st);
 #if defined(NANOHA)
 	void do_drop(Move m);
 	void undo_move(Move m);
@@ -234,10 +234,10 @@ public:
 	// 手を進めずにハッシュ計算のみ行う
 	uint64_t calc_hash_no_move(const Move m) const;
 #else
-  void do_move(Move m, StateInfo& st, const CheckInfo& ci, bool moveIsCheck);
-  void undo_move(Move m);
-  void do_null_move(StateInfo& st);
-  void undo_null_move();
+	void do_move(Move m, StateInfo& st, const CheckInfo& ci, bool moveIsCheck);
+	void undo_move(Move m);
+	void do_null_move(StateInfo& st);
+	void undo_null_move();
 #endif
 
 #if defined(NANOHA)
@@ -341,87 +341,87 @@ public:
 	int EncodeHuffman(unsigned char buf[32]) const;
 #endif
 
-  // Static exchange evaluation
-  int see(Move m) const;
-  int see_sign(Move m) const;
+	// Static exchange evaluation
+	int see(Move m) const;
+	int see_sign(Move m) const;
 
-  // Accessing hash keys
-  Key get_key() const;
-  Key get_exclusion_key() const;
+	// Accessing hash keys
+	Key get_key() const;
+	Key get_exclusion_key() const;
 #if !defined(NANOHA)
-  Key get_pawn_key() const;
-  Key get_material_key() const;
+	Key get_pawn_key() const;
+	Key get_material_key() const;
 #endif
 
-  // Incremental evaluation
-  Score value() const;
+	// Incremental evaluation
+	Score value() const;
 #if !defined(NANOHA)
-  Value non_pawn_material(Color c) const;
-  Score pst_delta(Piece piece, Square from, Square to) const;
+	Value non_pawn_material(Color c) const;
+	Score pst_delta(Piece piece, Square from, Square to) const;
 #endif
 
-  // Game termination checks
-  bool is_mate() const;
+	// Game termination checks
+	bool is_mate() const;
 #if defined(NANOHA)
-  // 将棋は同一局面を見ない引き分けはなし(持将棋は別で判断)なので、SkipRepetitionは使わない
-  // 戻り値trueは千日手
-  // 戻り値falseでret==0はなにもなし
-  // 戻り値falseでret==-1は連続王手の千日手
-  bool is_draw(int& ret) const;
+	// 将棋は同一局面を見ない引き分けはなし(持将棋は別で判断)なので、SkipRepetitionは使わない
+	// 戻り値trueは千日手
+	// 戻り値falseでret==0はなにもなし
+	// 戻り値falseでret==-1は連続王手の千日手
+	bool is_draw(int& ret) const;
 #else
-  template<bool SkipRepetition> bool is_draw() const;
+	template<bool SkipRepetition> bool is_draw() const;
 #endif
 
-  // Plies from start position to the beginning of search
-  int startpos_ply_counter() const;
+	// Plies from start position to the beginning of search
+	int startpos_ply_counter() const;
 
-  // Other properties of the position
+	// Other properties of the position
 #if !defined(NANOHA)
-  bool opposite_colored_bishops() const;
-  bool has_pawn_on_7th(Color c) const;
-  bool is_chess960() const;
+	bool opposite_colored_bishops() const;
+	bool has_pawn_on_7th(Color c) const;
+	bool is_chess960() const;
 #endif
 
-  // Current thread ID searching on the position
-  int thread() const;
+	// Current thread ID searching on the position
+	int thread() const;
 #if defined(NANOHA)
-  int64_t tnodes_searched() const;
-  void set_tnodes_searched(int64_t n);
+	int64_t tnodes_searched() const;
+	void set_tnodes_searched(int64_t n);
 #if defined(CHK_PERFORM)
-  unsigned long mate3_searched() const;
-  void set_mate3_searched(unsigned long  n);
-  void inc_mate3_searched(unsigned long  n=1);
+	unsigned long mate3_searched() const;
+	void set_mate3_searched(unsigned long  n);
+	void inc_mate3_searched(unsigned long  n=1);
 #endif // defined(CHK_PERFORM)
 #endif
 
-  int64_t nodes_searched() const;
-  void set_nodes_searched(int64_t n);
+	int64_t nodes_searched() const;
+	void set_nodes_searched(int64_t n);
 
-  // Position consistency check, for debugging
-  bool is_ok(int* failedStep = NULL) const;
-  void flip_me();
+	// Position consistency check, for debugging
+	bool is_ok(int* failedStep = NULL) const;
+	void flip_me();
 #if defined(NANOHA)
 	uint32_t handValue_of_side() const {return hand[sideToMove].h; }
 	template<Color us> uint32_t handValue() const {return hand[us].h; }
 	int get_material() const { return material; }
 #endif
 
-  // Global initialization
-  static void init();
+	// Global initialization
+	static void init();
 
 #if defined(NANOHA)
 	static unsigned char relate_pos(int z1, int z2) {return DirTbl[z1][z2];}	// z1とz2の位置関係.
 #endif
 private:
 
-  // Initialization helper functions (used while setting up a position)
-  void clear();
-  void put_piece(Piece p, Square s);
+	// Initialization helper functions (used while setting up a position)
+	void clear();
+	void put_piece(Piece p, Square s);
 #if !defined(NANOHA)
-  void set_castle(int f, Square ksq, Square rsq);
-  void set_castling_rights(char token);
+	void set_castle(int f, Square ksq, Square rsq);
+	void set_castling_rights(char token);
 #endif
-  bool move_is_legal(const Move m) const;
+	bool move_is_legal(const Move m) const;
 
 #if defined(NANOHA)
 	void init_position(const unsigned char board_ori[9][9], const int Mochigoma_ori[]);
@@ -429,45 +429,45 @@ private:
 	void init_effect();
 #endif
 
-  // Helper functions for doing and undoing moves
+	// Helper functions for doing and undoing moves
 #if !defined(NANOHA)
-  void do_capture_move(Key& key, PieceType capture, Color them, Square to, bool ep);
-  void do_castle_move(Move m);
-  void undo_castle_move(Move m);
+	void do_capture_move(Key& key, PieceType capture, Color them, Square to, bool ep);
+	void do_castle_move(Move m);
+	void undo_castle_move(Move m);
 
-  template<bool FindPinned>
-  Bitboard hidden_checkers() const;
+	template<bool FindPinned>
+	Bitboard hidden_checkers() const;
 #endif
 
-  // Computing hash keys from scratch (for initialization and debugging)
-  Key compute_key() const;
+	// Computing hash keys from scratch (for initialization and debugging)
+	Key compute_key() const;
 #if defined(NANOHA)
-  int compute_material() const;
+	int compute_material() const;
 #endif
 #if !defined(NANOHA)
-  Key compute_pawn_key() const;
-  Key compute_material_key() const;
+	Key compute_pawn_key() const;
+	Key compute_material_key() const;
 
-  // Computing incremental evaluation scores and material counts
-  Score pst(Piece p, Square s) const;
-  Score compute_value() const;
-  Value compute_non_pawn_material(Color c) const;
+	// Computing incremental evaluation scores and material counts
+	Score pst(Piece p, Square s) const;
+	Score compute_value() const;
+	Value compute_non_pawn_material(Color c) const;
 #endif
 
 #if !defined(NANOHA)
-  // Board
-  Piece board[64];             // [square]
+	// Board
+	Piece board[64];             // [square]
 
-  // Bitboards
-  Bitboard byTypeBB[8];        // [pieceType]
-  Bitboard byColorBB[2];       // [color]
+	// Bitboards
+	Bitboard byTypeBB[8];        // [pieceType]
+	Bitboard byColorBB[2];       // [color]
 
-  // Piece counts
-  int pieceCount[2][8];        // [color][pieceType]
+	// Piece counts
+	int pieceCount[2][8];        // [color][pieceType]
 
-  // Piece lists
-  Square pieceList[2][8][16];  // [color][pieceType][index]
-  int index[64];               // [square]
+	// Piece lists
+	Square pieceList[2][8][16];  // [color][pieceType][index]
+	int index[64];               // [square]
 #endif
 
 #if defined(NANOHA)
@@ -527,39 +527,39 @@ private:
 
 #endif
 
-  // Other info
+	// Other info
 #if !defined(NANOHA)
-  int castleRightsMask[64];    // [square]
-  Square castleRookSquare[16]; // [castleRight]
+	int castleRightsMask[64];    // [square]
+	Square castleRookSquare[16]; // [castleRight]
 #endif
-  StateInfo startState;
-  int64_t nodes;
-  int startPosPly;
-  Color sideToMove;		// 手番の色
-  int threadID;
+	StateInfo startState;
+	int64_t nodes;
+	int startPosPly;
+	Color sideToMove;		// 手番の色
+	int threadID;
 #if defined(NANOHA)
-  int64_t tnodes;
-  unsigned long count_Mate1plyDrop;		// 駒打ちで詰んだ回数
-  unsigned long count_Mate1plyMove;		// 駒移動で詰んだ回数
-  unsigned long count_Mate3ply;			// Mate3()で詰んだ回数
+	int64_t tnodes;
+	unsigned long count_Mate1plyDrop;		// 駒打ちで詰んだ回数
+	unsigned long count_Mate1plyMove;		// 駒移動で詰んだ回数
+	unsigned long count_Mate3ply;			// Mate3()で詰んだ回数
 #endif
-  StateInfo* st;
+	StateInfo* st;
 #if !defined(NANOHA)
-  int chess960;
+	int chess960;
 #endif
 
-  // Static variables
+	// Static variables
 #if defined(NANOHA)
 //  static Key zobrist[2][RY+1][0x100];
-  static Key zobrist[GRY+1][0x100];
+	static Key zobrist[GRY+1][0x100];
 #else
-  static Score pieceSquareTable[16][64]; // [piece][square]
-  static Key zobrist[2][8][64];          // [color][pieceType][square]
-  static Key zobEp[64];                  // [square]
-  static Key zobCastle[16];              // [castleRight]
+	static Score pieceSquareTable[16][64]; // [piece][square]
+	static Key zobrist[2][8][64];          // [color][pieceType][square]
+	static Key zobEp[64];                  // [square]
+	static Key zobCastle[16];              // [castleRight]
 #endif
-  static Key zobSideToMove;		// 手番を区別する
-  static Key zobExclusion;		// NULL MOVEかどうか区別する
+	static Key zobSideToMove;		// 手番を区別する
+	static Key zobExclusion;		// NULL MOVEかどうか区別する
 #if defined(NANOHA)
 	static unsigned char DirTbl[0xA0][0x100];	// 方向用[from][to]
 
@@ -580,31 +580,31 @@ private:
 };
 
 inline int64_t Position::nodes_searched() const {
-  return nodes;
+	return nodes;
 }
 
 inline void Position::set_nodes_searched(int64_t n) {
-  nodes = n;
+	nodes = n;
 }
 
 #if defined(NANOHA)
 inline int64_t Position::tnodes_searched() const {
-  return tnodes;
+	return tnodes;
 }
 
 inline void Position::set_tnodes_searched(int64_t n) {
-  tnodes = n;
+	tnodes = n;
 }
 
 #if defined(CHK_PERFORM)
 inline unsigned long Position::mate3_searched() const {
-  return count_Mate3ply;
+	return count_Mate3ply;
 }
 inline void Position::set_mate3_searched(unsigned long  n) {
-  count_Mate3ply = n;
+	count_Mate3ply = n;
 }
 inline void Position::inc_mate3_searched(unsigned long  n) {
-  count_Mate3ply += n;
+	count_Mate3ply += n;
 }
 #endif // defined(CHK_PERFORM)
 
@@ -614,15 +614,15 @@ inline Piece Position::piece_on(Square s) const {
 #if defined(NANOHA)
 	return ban[s];
 #else
-  return board[s];
+	return board[s];
 #endif
 }
 
 inline bool Position::square_is_empty(Square s) const {
 #if defined(NANOHA)
-  return ban[s] == EMP;
+	return ban[s] == EMP;
 #else
-  return board[s] == PIECE_NONE;
+	return board[s] == PIECE_NONE;
 #endif
 }
 
@@ -637,48 +637,48 @@ inline int Position::pin_on(Square s) const {
 #endif
 
 inline Color Position::side_to_move() const {
-  return sideToMove;
+	return sideToMove;
 }
 
 #if !defined(NANOHA)
 inline Bitboard Position::occupied_squares() const {
-  return byTypeBB[0];
+	return byTypeBB[0];
 }
 
 inline Bitboard Position::empty_squares() const {
-  return ~byTypeBB[0];
+	return ~byTypeBB[0];
 }
 
 inline Bitboard Position::pieces(Color c) const {
-  return byColorBB[c];
+	return byColorBB[c];
 }
 
 inline Bitboard Position::pieces(PieceType pt) const {
-  return byTypeBB[pt];
+	return byTypeBB[pt];
 }
 
 inline Bitboard Position::pieces(PieceType pt, Color c) const {
-  return byTypeBB[pt] & byColorBB[c];
+	return byTypeBB[pt] & byColorBB[c];
 }
 
 inline Bitboard Position::pieces(PieceType pt1, PieceType pt2) const {
-  return byTypeBB[pt1] | byTypeBB[pt2];
+	return byTypeBB[pt1] | byTypeBB[pt2];
 }
 
 inline Bitboard Position::pieces(PieceType pt1, PieceType pt2, Color c) const {
-  return (byTypeBB[pt1] | byTypeBB[pt2]) & byColorBB[c];
+	return (byTypeBB[pt1] | byTypeBB[pt2]) & byColorBB[c];
 }
 
 inline int Position::piece_count(Color c, PieceType pt) const {
-  return pieceCount[c][pt];
+	return pieceCount[c][pt];
 }
 
 inline const Square* Position::piece_list(Color c, PieceType pt) const {
-  return pieceList[c][pt];
+	return pieceList[c][pt];
 }
 
 inline Square Position::ep_square() const {
-  return st->epSquare;
+	return st->epSquare;
 }
 #endif
 
@@ -686,50 +686,50 @@ inline Square Position::king_square(Color c) const {
 #if defined(NANOHA)
 	return (c == BLACK) ? Square(sq_king<BLACK>()) : Square(sq_king<WHITE>());
 #else
-  return pieceList[c][KING][0];
+	return pieceList[c][KING][0];
 #endif
 }
 
 #if !defined(NANOHA)
 inline bool Position::can_castle(CastleRight f) const {
-  return st->castleRights & f;
+	return st->castleRights & f;
 }
 
 inline bool Position::can_castle(Color c) const {
-  return st->castleRights & ((WHITE_OO | WHITE_OOO) << c);
+	return st->castleRights & ((WHITE_OO | WHITE_OOO) << c);
 }
 
 inline Square Position::castle_rook_square(CastleRight f) const {
-  return castleRookSquare[f];
+	return castleRookSquare[f];
 }
 
 template<>
 inline Bitboard Position::attacks_from<PAWN>(Square s, Color c) const {
-  return StepAttacksBB[make_piece(c, PAWN)][s];
+	return StepAttacksBB[make_piece(c, PAWN)][s];
 }
 
 template<PieceType Piece> // Knight and King and white pawns
 inline Bitboard Position::attacks_from(Square s) const {
-  return StepAttacksBB[Piece][s];
+	return StepAttacksBB[Piece][s];
 }
 
 template<>
 inline Bitboard Position::attacks_from<BISHOP>(Square s) const {
-  return bishop_attacks_bb(s, occupied_squares());
+	return bishop_attacks_bb(s, occupied_squares());
 }
 
 template<>
 inline Bitboard Position::attacks_from<ROOK>(Square s) const {
-  return rook_attacks_bb(s, occupied_squares());
+	return rook_attacks_bb(s, occupied_squares());
 }
 
 template<>
 inline Bitboard Position::attacks_from<QUEEN>(Square s) const {
-  return attacks_from<ROOK>(s) | attacks_from<BISHOP>(s);
+	return attacks_from<ROOK>(s) | attacks_from<BISHOP>(s);
 }
 
 inline Bitboard Position::checkers() const {
-  return st->checkersBB;
+	return st->checkersBB;
 }
 #endif
 
@@ -740,7 +740,7 @@ inline bool Position::in_check() const {
 	Color them = flip(sideToMove);
 	return EXIST_EFFECT(effect[them][pos]);
 #else
-  return st->checkersBB != 0;
+	return st->checkersBB != 0;
 #endif
 }
 
@@ -754,7 +754,7 @@ inline bool Position::at_checking() const {
 
 #if !defined(NANOHA)
 inline bool Position::pawn_is_passed(Color c, Square s) const {
-  return !(pieces(PAWN, flip(c)) & passed_pawn_mask(c, s));
+	return !(pieces(PAWN, flip(c)) & passed_pawn_mask(c, s));
 }
 #endif
 
@@ -770,7 +770,7 @@ inline Key Position::get_key() const {
 		}
 	}
 #endif
-  return st->key;
+	return st->key;
 }
 
 inline Key Position::get_exclusion_key() const {
@@ -785,100 +785,100 @@ inline Key Position::get_exclusion_key() const {
 		}
 	}
 #endif
-  return st->key ^ zobExclusion;
+	return st->key ^ zobExclusion;
 }
 
 #if !defined(NANOHA)
 inline Key Position::get_pawn_key() const {
-  return st->pawnKey;
+	return st->pawnKey;
 }
 
 inline Key Position::get_material_key() const {
-  return st->materialKey;
+	return st->materialKey;
 }
 #endif
 
 #if !defined(NANOHA)
 inline Score Position::pst(Piece p, Square s) const {
-  return pieceSquareTable[p][s];
+	return pieceSquareTable[p][s];
 }
 #endif
 
 #if !defined(NANOHA)
 inline Score Position::pst_delta(Piece piece, Square from, Square to) const {
-  return pieceSquareTable[piece][to] - pieceSquareTable[piece][from];
+	return pieceSquareTable[piece][to] - pieceSquareTable[piece][from];
 }
 #endif
 
 #if !defined(NANOHA)
 inline Score Position::value() const {
-  return st->value;
+	return st->value;
 }
 #endif
 
 #if !defined(NANOHA)
 inline Value Position::non_pawn_material(Color c) const {
-  return st->npMaterial[c];
+	return st->npMaterial[c];
 }
 
 inline bool Position::is_passed_pawn_push(Move m) const {
 
-  return   board[move_from(m)] == make_piece(sideToMove, PAWN)
-        && pawn_is_passed(sideToMove, move_to(m));
+	return   board[move_from(m)] == make_piece(sideToMove, PAWN)
+	      && pawn_is_passed(sideToMove, move_to(m));
 }
 #endif
 
 inline int Position::startpos_ply_counter() const {
-  return startPosPly + st->pliesFromNull; // HACK
+	return startPosPly + st->pliesFromNull; // HACK
 }
 
 #if !defined(NANOHA)
 inline bool Position::opposite_colored_bishops() const {
 
-  return   pieceCount[WHITE][BISHOP] == 1
-        && pieceCount[BLACK][BISHOP] == 1
-        && opposite_colors(pieceList[WHITE][BISHOP][0], pieceList[BLACK][BISHOP][0]);
+	return   pieceCount[WHITE][BISHOP] == 1
+	      && pieceCount[BLACK][BISHOP] == 1
+	      && opposite_colors(pieceList[WHITE][BISHOP][0], pieceList[BLACK][BISHOP][0]);
 }
 
 inline bool Position::has_pawn_on_7th(Color c) const {
-  return pieces(PAWN, c) & rank_bb(relative_rank(c, RANK_7));
+	return pieces(PAWN, c) & rank_bb(relative_rank(c, RANK_7));
 }
 
 inline bool Position::is_chess960() const {
-  return chess960;
+	return chess960;
 }
 #endif
 
 inline bool Position::is_capture_or_promotion(Move m) const {
 #if defined(NANOHA)
-  return move_captured(m) != EMP || is_promotion(m);
+	return move_captured(m) != EMP || is_promotion(m);
 #else
 
-  assert(is_ok(m));
-  return is_special(m) ? !is_castle(m) : !square_is_empty(move_to(m));
+	assert(is_ok(m));
+	return is_special(m) ? !is_castle(m) : !square_is_empty(move_to(m));
 #endif
 }
 
 inline bool Position::is_capture(Move m) const {
 #if defined(NANOHA)
-  return !square_is_empty(move_to(m));
+	return !square_is_empty(move_to(m));
 #else
-  // Note that castle is coded as "king captures the rook"
-  assert(is_ok(m));
-  return (!square_is_empty(move_to(m)) && !is_castle(m)) || is_enpassant(m);
+	// Note that castle is coded as "king captures the rook"
+	assert(is_ok(m));
+	return (!square_is_empty(move_to(m)) && !is_castle(m)) || is_enpassant(m);
 #endif
 }
 
 inline PieceType Position::captured_piece_type() const {
 #if defined(NANOHA)
-  return type_of(st->captured);
+	return type_of(st->captured);
 #else
-  return st->capturedType;
+	return st->capturedType;
 #endif
 }
 
 inline int Position::thread() const {
-  return threadID;
+	return threadID;
 }
 
 #if defined(NANOHA)
