@@ -2,7 +2,7 @@
   NanohaMini, a USI shogi(japanese-chess) playing engine derived from Stockfish 2.1
   Copyright (C) 2004-2008 Tord Romstad (Glaurung author)
   Copyright (C) 2008-2010 Marco Costalba, Joona Kiiski, Tord Romstad (Stockfish author)
-  Copyright (C) 2014 Kazuyuki Kawabata
+  Copyright (C) 2014-2015 Kazuyuki Kawabata
 
   NanohaMini is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -301,7 +301,11 @@ public:
 
 	// ‹Ç–Ê‚Ì•]‰¿
 	static void init_evaluate();
+#if defined(EVAL_APERY)
+	int make_list_apery(int list0[], int list1[], int nlist) const;
+#else
 	int make_list(int * pscore, int list0[], int list1[] ) const;
+#endif
 	int evaluate(const Color us) const;
 
 	// ˆî’ë”»’è(bInaniwa ‚ÉƒZƒbƒg‚·‚é‚½‚ß const ‚Å‚È‚¢)

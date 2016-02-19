@@ -2,7 +2,7 @@
   NanohaMini, a USI shogi(japanese-chess) playing engine derived from Stockfish 2.1
   Copyright (C) 2004-2008 Tord Romstad (Glaurung author)
   Copyright (C) 2008-2010 Marco Costalba, Joona Kiiski, Tord Romstad (Stockfish author)
-  Copyright (C) 2014 Kazuyuki Kawabata
+  Copyright (C) 2014-2015 Kazuyuki Kawabata
 
   NanohaMini is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -40,12 +40,12 @@
 #include "tt.h"
 ///#include "ucioption.h"
 #if defined(NANOHA)
-#if defined(EVAL_MICRO)
-#include "param_micro.h"
-#elif defined(EVAL_OLD)
-#include "param_old.h"
-#else
-#include "param_new.h"
+#if defined(EVAL_NANO)
+#include "param_nano.h"
+#elif defined(EVAL_MINI)
+#include "param_mini.h"
+#elif defined(EVAL_APERY)
+#include "param_apery.h"
 #endif
 #endif
 using std::string;
@@ -171,7 +171,7 @@ namespace {
 
 #if defined(NANOHA)
 	// To convert a Piece to and from a FEN char
-	const string PieceToChar(".PLNSGBRKPLNS.BRplnsgbrkplns.br");
+	const string PieceToChar(".PLNSGBRKPLNS.BR.plnsgbrkplns.br");
 
 	struct PieceType2Str : public std::map<PieceType, std::string> {
 	PieceType2Str() {
@@ -567,7 +567,7 @@ const string Position::to_fen() const {
 					emptyCnt = 0;
 				}
 #if defined(NANOHA)
-				if (piece_on(sq) & PROMOTED) {
+				if ((piece_on(sq)-1) & PROMOTED) {
 					fen << "+";
 				}
 #endif
@@ -580,7 +580,11 @@ const string Position::to_fen() const {
 		if (emptyCnt)
 			fen << emptyCnt;
 
+#if defined(NANOHA)
+		if (rank < RANK_9)
+#else
 		if (rank > RANK_1)
+#endif
 			fen << '/';
 	}
 
@@ -740,7 +744,7 @@ void Position::print_csa(Move move) const {
 	if ((n = h.getHI()) > 0) while (n--){ cout << "00HI"; }
 	}
 	cout << endl << (sideToMove == BLACK ? '+' : '-') << endl;
-	cout << "SFEN is: " << to_fen() << "\nKey is: 0x" << std::hex << st->key << endl;
+	cout << "SFEN is: " << to_fen() << "\nKey is: 0x" << std::hex << st->key << std::dec << endl;
 }
 #endif
 
@@ -2250,17 +2254,17 @@ bool Position::is_draw(int& ret) const {
 	{
 		StateInfo* stp = st->previous->previous;
 		int rept = 0;
-		bool cont_check = (st->previous->effect && stp->previous->effect) ? true : false;
+		bool cont_check = (st->effect && stp->effect) ? true : false;
 
 		do {
 			stp = stp->previous->previous;
-			if (stp->previous->effect == 0) cont_check = false;
+			if (stp->effect == 0) cont_check = false;
 
 			if (stp->key == st->key && stp->hand == st->hand) {
 				rept++;
 				// ‰ß‹Ž‚É3‰ñ(Œ»‹Ç–ÊŠÜ‚ß‚Ä4‰ñ)oŒ»‚µ‚Ä‚¢‚½‚çç“úŽè.
 				if (rept >= 3) {
-					if (cont_check) {ret = -1; return false; }
+					if (cont_check) {ret = 1; return false; }
 					return true;
 				}
 			}

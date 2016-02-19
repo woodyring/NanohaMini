@@ -2,7 +2,7 @@
   NanohaMini, a USI shogi(japanese-chess) playing engine derived from Stockfish 2.1
   Copyright (C) 2004-2008 Tord Romstad (Glaurung author)
   Copyright (C) 2008-2010 Marco Costalba, Joona Kiiski, Tord Romstad (Stockfish author)
-  Copyright (C) 2014 Kazuyuki Kawabata
+  Copyright (C) 2014-2015 Kazuyuki Kawabata
 
   NanohaMini is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -47,6 +47,15 @@ static const string EvalPos[] = {
 	"lnsgkgsnl/1b5r1/ppppppppp/9/9/6P2/PPPPPP1PP/1R5B1/LNSGKGSNL b - 1",
 	"lnsgkgsnl/1r5b1/ppppppppp/9/9/2P6/PP1PPPPPP/1B5R1/LNSGKGSNL w - 1",
 	"lnsgkgsnl/1b5r1/ppppppppp/9/9/6P2/PPPPPP1PP/1R5B1/LNSGKGSNL w - 1",
+	// 対称の確認.
+	//   点対称
+	"+l+n+sgkgsnl/1+r5b1/+pp+pp+ppppp/9/9/9/PPPP+PP+PP+P/1B5+R1/LNSGKG+S+N+L b - 1",
+	//   左右対称
+	"lnsgkg+s+n+l/1+b5r1/+pp+pp+pp+ppp/9/9/9/+PP+PP+PP+PPP/1+B5R1/LNSGKG+S+N+L b - 1",
+	//   上下反転と左右反転
+	"l6nl/5+P1gk/2np1S3/p1p4Pp/3P2Sp1/1PPb2P1P/P5GS1/R8/LN4bKL w RGgsn5p 1",
+	"ln4Bkl/r8/p5gs1/1ppB2p1p/3p2sP1/P1P4pP/2NP1s3/5+p1GK/L6NL w GSN5Prg 1",
+	"lkB4nl/8r/1sg5p/p1p2Bpp1/1Ps2p3/Pp4P1P/3s1PN2/KG1+p5/LN6L w GSN5Prg 1",
 	""
 };
 #endif

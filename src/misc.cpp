@@ -2,7 +2,7 @@
   NanohaMini, a USI shogi(japanese-chess) playing engine derived from Stockfish 2.1
   Copyright (C) 2004-2008 Tord Romstad (Glaurung author)
   Copyright (C) 2008-2010 Marco Costalba, Joona Kiiski, Tord Romstad (Stockfish author)
-  Copyright (C) 2014 Kazuyuki Kawabata
+  Copyright (C) 2014-2015 Kazuyuki Kawabata
 
   NanohaMini is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -57,15 +57,15 @@ using namespace std;
 /// current date (in the format YYMMDD) is used as a version number.
 
 #if defined(NANOHA)
-#if defined(EVAL_MICRO)
-static const string AppName = "NanohaMicro";
-static const string EngineVersion = "0.2.1.1";
-#elif defined(EVAL_OLD)
+#if defined(EVAL_NANO)
+static const string AppName = "NanohaNano";
+static const string EngineVersion = "0.2.2";
+#elif defined(EVAL_MINI)
 static const string AppName = "NanohaMini";
-static const string EngineVersion = "0.2.1.1";
-#else
-static const string AppName = "NanohaMini";
-static const string EngineVersion = "0.2.1.1b";
+static const string EngineVersion = "0.2.2";
+#elif defined(EVAL_APERY)
+static const string AppName = "Nanopery";
+static const string EngineVersion = "0.2.2";
 #endif
 #else
 static const string AppName = "Stockfish";

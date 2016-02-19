@@ -2,7 +2,7 @@
   NanohaMini, a USI shogi(japanese-chess) playing engine derived from Stockfish 2.1
   Copyright (C) 2004-2008 Tord Romstad (Glaurung author)
   Copyright (C) 2008-2010 Marco Costalba, Joona Kiiski, Tord Romstad (Stockfish author)
-  Copyright (C) 2014 Kazuyuki Kawabata
+  Copyright (C) 2014-2015 Kazuyuki Kawabata
 
   NanohaMini is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -108,7 +108,11 @@ namespace {
 	const Depth RazorDepth = 4 * ONE_PLY;
 
 	// Dynamic razoring margin based on depth
+#if defined(NANOHA)
+	inline Value razor_margin(Depth d) { return Value(0x200 + 0x25 * int(d)); }
+#else
 	inline Value razor_margin(Depth d) { return Value(0x200 + 0x10 * int(d)); }
+#endif
 
 	// Maximum depth for use of dynamic threat detection when null move fails low
 	const Depth ThreatDepth = 5 * ONE_PLY;
@@ -138,7 +142,11 @@ namespace {
 	// Step 12. Futility pruning
 
 	// Futility margin for quiescence search
+#if defined(NANOHA)
+	const Value FutilityMarginQS = Value(0x100);
+#else
 	const Value FutilityMarginQS = Value(0x80);
+#endif
 
 	// Futility lookup tables (initialized at startup) and their access functions
 	Value FutilityMargins[16][64]; // [depth][moveNumber]
@@ -429,7 +437,11 @@ bool think(Position& pos, const SearchLimits& limits, Move searchMoves[]) {
 	else if (Limits.time && Limits.time < 5000)
 		NodesBetweenPolls = 5000;
 	else
+#if defined(NANOHA)
+		NodesBetweenPolls = 10000;
+#else
 		NodesBetweenPolls = 30000;
+#endif
 
 	// Look for a book move
 	if (Options["OwnBook"].value<bool>())
@@ -1261,7 +1273,11 @@ split_point_start: // At split points actual search starts from here
 
 				if (abs(ttValue) < VALUE_KNOWN_WIN)
 				{
+#if defined(NANOHA)
+					Value rBeta = ttValue - int(depth) - 6;
+#else
 					Value rBeta = ttValue - int(depth);
+#endif
 					ss->excludedMove = move;
 					ss->skipNullMove = true;
 					Value v = search<NonPV>(pos, ss, rBeta - 1, rBeta, depth / 2);
@@ -1358,6 +1374,7 @@ split_point_start: // At split points actual search starts from here
 			// Step 14. Make the move
 #if defined(NANOHA)
 			pos.do_move(move, st);
+			(ss+1)->checkmateTested = false;
 #else
 			pos.do_move(move, st, ci, givesCheck);
 #endif
@@ -2397,7 +2414,7 @@ split_point_start: // At split points actual search starts from here
 		                 || stillAtFirstMove;
 
 #if defined(NANOHA)
-		if (!Limits.maxDepth) {
+		if (!Limits.maxDepth && !Limits.infinite) {
 			if ((   noMoreTime
 			    && (!Limits.maxTime || t >= Limits.maxTime))
 			    || (Limits.maxNodes && pos.nodes_searched() >= Limits.maxNodes))

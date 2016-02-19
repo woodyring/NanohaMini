@@ -2,7 +2,7 @@
   NanohaMini, a USI shogi(japanese-chess) playing engine derived from Stockfish 2.1
   Copyright (C) 2004-2008 Tord Romstad (Glaurung author)
   Copyright (C) 2008-2010 Marco Costalba, Joona Kiiski, Tord Romstad (Stockfish author)
-  Copyright (C) 2014 Kazuyuki Kawabata
+  Copyright (C) 2014-2015 Kazuyuki Kawabata
 
   NanohaMini is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -25,14 +25,14 @@
 #include "evaluate.h"
 
 // 評価関数関連定義
-#if defined(EVAL_MICRO)
-#include "param_micro.h"
-#elif defined(EVAL_OLD)
-#include "param_old.h"
+#define EVAL_SQUARE
+
+#if defined(EVAL_NANO)
+#include "param_nano.h"
+#define FV_BIN "fv_nano.bin"
+#elif defined(EVAL_MINI)
+#include "param_mini.h"
 #define FV_BIN "fv_mini.bin"
-#else
-#include "param_new.h"
-#define FV_BIN "fv_mini2.bin"
 #endif
 #define NLIST	38
 
@@ -47,7 +47,9 @@
 
 #define Inv(sq)             (nsquare-1-sq)
 #define PcOnSq(k,i)         fv_kp[k][i]
+#if !defined(EVAL_NANO)
 #define PcPcOn(i,j)         fv_pp[i][j]
+#endif
 
 #define I2HandPawn(hand)    (((hand) & HAND_FU_MASK) >> HAND_FU_SHIFT)
 #define I2HandLance(hand)   (((hand) & HAND_KY_MASK) >> HAND_KY_SHIFT)
@@ -65,7 +67,6 @@ enum {
 
 enum { nhand = 7, nfile = 9,  nrank = 9,  nsquare = 81 };
 
-#if !defined(EVAL_MICRO)
 enum {
 	// PP用の定義
 	pp_bpawn      =  -9,            		//   -9: 先手Pの位置は 9-80(72箇所)、これを  0- 71にマップ
@@ -126,15 +127,18 @@ enum {
 	kp_wdragon      = 1395,
 	kp_end          = 1476
 };
-#endif
 
 namespace {
 	short p_value[31];
 
-#if !defined(EVAL_MICRO)
+#if !defined(EVAL_NANO)
+#if defined(EVAL_SQUARE)
+	short fv_pp[pp_end][pp_end];
+#else
 	short fv_pp[pp_bend][pp_end];
-	short fv_kp[nsquare][kp_end];
 #endif
+#endif
+	short fv_kp[nsquare][kp_end];
 }
 
 namespace NanohaTbl {
@@ -152,10 +156,91 @@ namespace NanohaTbl {
 	};
 }
 
+#if defined(EVAL_SQUARE)
+namespace {
+	void conv_pp(short pp[pp_end][pp_end], short pp_ori[pp_bend][pp_end])
+	{
+		static const struct {
+			int base, inv_base, start, end;
+		} tbl[18] = {
+			{pp_bpawn  , pp_wpawn  ,  9, 81},
+			{pp_blance , pp_wlance ,  9, 81},
+			{pp_bknight, pp_wknight, 18, 81},
+			{pp_bsilver, pp_wsilver,  0, 81},
+			{pp_bgold  , pp_wgold  ,  0, 81},
+			{pp_bbishop, pp_wbishop,  0, 81},
+			{pp_bhorse , pp_whorse ,  0, 81},
+			{pp_brook  , pp_wrook  ,  0, 81},
+			{pp_bdragon, pp_wdragon,  0, 81},
+			{pp_wpawn  , pp_bpawn  ,  0, 72},
+			{pp_wlance , pp_blance ,  0, 72},
+			{pp_wknight, pp_bknight,  0, 63},
+			{pp_wsilver, pp_bsilver,  0, 81},
+			{pp_wgold  , pp_bgold  ,  0, 81},
+			{pp_wbishop, pp_bbishop,  0, 81},
+			{pp_whorse , pp_bhorse ,  0, 81},
+			{pp_wrook  , pp_brook  ,  0, 81},
+			{pp_wdragon, pp_bdragon,  0, 81},
+		};
+		for (size_t i = 0; i < sizeof(tbl)/sizeof(tbl[0])/ 2; i++) {
+			for (int sq1 = tbl[i].start; sq1 < tbl[i].end; sq1++) {
+				int p1 = tbl[i].base + sq1;
+				int p1inv = tbl[i].inv_base + Inv(sq1);
+				if (p1 < 0 || p1 >= pp_bend) {
+					printf("error1\n");
+					*(int*)0 = 0;
+				}
+				if (p1inv < pp_bend || p1inv >= pp_end) {
+					printf("error1inv\n");
+					*(int*)0 = 0;
+				}
+				for (size_t j = 0; j < sizeof(tbl)/sizeof(tbl[0]); j++) {
+					for (int sq2 = tbl[j].start; sq2 < tbl[j].end; sq2++) {
+						int p2 = tbl[j].base + sq2;
+						int p2inv = tbl[j].inv_base + Inv(sq2);
+						if (p2 < 0 || p2 >= pp_end) {
+							printf("error2\n");
+							*(int*)0 = 0;
+						}
+						if (p2inv < 0 || p2inv >= pp_end) {
+							printf("error2inv\n");
+							*(int*)0 = 0;
+						}
+						pp[p1][p2]       =  pp_ori[p1][p2];
+						if (p2inv < pp_bend) {
+							pp[p1inv][p2inv] = pp_ori[p2inv][p1inv];
+						} else {
+							pp[p1inv][p2inv] = -pp_ori[p1][p2];
+						}
+					}
+				}
+			}
+		}
+
+#if !defined(NDEBUG)
+		// 検算
+		for (int sq1 = 0; sq1 < pp_bend; sq1++) {
+			for (int sq2 = 0; sq2 < pp_end; sq2++) {
+				if (pp[sq1][sq2] != pp_ori[sq1][sq2]) {
+					printf("sq1 = %d, sq2 = %d, pp=%d, pp_ori=%d\n", sq1, sq2, pp[sq1][sq2], pp_ori[sq1][sq2]);
+				}
+			}
+		}
+		for (int sq1 = 0; sq1 < pp_end; sq1++) {
+			for (int sq2 = 0; sq2 < pp_end; sq2++) {
+				if (pp[sq1][sq2] != pp[sq2][sq1]) {
+					printf("sq1 = %d, sq2 = %d, pp=%d, pp=%d\n", sq1, sq2, pp[sq1][sq2], pp[sq2][sq1]);
+				}
+			}
+		}
+#endif
+	}
+}
+#endif
+
 void Position::init_evaluate()
 {
 	int iret=0;
-#if !defined(EVAL_MICRO)
 	FILE *fp;
 	const char *fname ="評価ベクトル";
 
@@ -166,12 +251,26 @@ void Position::init_evaluate()
 		fp = fopen(fname, "rb");
 		if ( fp == NULL ) { iret = -2; break;}
 
+#if !defined(EVAL_NANO)
 		size = pp_bend * pp_end;
+#if defined(EVAL_SQUARE)
+		short (*p)[pp_end] = (short (*)[pp_end])malloc(sizeof(short)*size);
+		if (p == NULL) { iret = -2; break;}
+		if ( fread( p, sizeof(short), size, fp ) != size )
+		{
+			iret = -2;
+			break;
+		}
+		conv_pp(fv_pp, p);
+		free(p);
+#else
 		if ( fread( fv_pp, sizeof(short), size, fp ) != size )
 		{
 			iret = -2;
 			break;
 		}
+#endif
+#endif
 
 		size = nsquare * kp_end;
 		if ( fread( fv_kp, sizeof(short), size, fp ) != size ) {
@@ -187,15 +286,14 @@ void Position::init_evaluate()
 	if (fp) fclose( fp );
 
 	if (iret < 0) {
-#if !defined(NDEBUG)
+//#if !defined(NDEBUG)
 		std::cerr << "Can't load " FV_BIN "." << std::endl;
-#endif
+//#endif
 #if defined(CSADLL) || defined(CSA_DIRECT)
 		::MessageBox(NULL, "評価ベクトルがロードできません\n終了します", "Error!", MB_OK);
 		exit(1);
 #endif	// defined(CSA_DLL) || defined(CSA_DIRECT)
 	}
-#endif
 
 	for (int i = 0; i < 31; i++) { p_value[i]       = 0; }
 
@@ -311,7 +409,6 @@ int Position::compute_material() const
 	return v;
 }
 
-#if !defined(EVAL_MICRO)
 int Position::make_list(int * pscore, int list0[NLIST], int list1[NLIST] ) const
 {
 	int sq, i, score, sq_bk0, sq_bk1;
@@ -320,7 +417,32 @@ int Position::make_list(int * pscore, int list0[NLIST], int list1[NLIST] ) const
 	sq_bk0 = SQ_BKING;
 	sq_bk1 = Inv(SQ_WKING);
 
+#if defined(EVAL_SQUARE)
+	static const int pp_tbl[32] = {
+		-1, pp_bpawn, pp_blance, pp_bknight, pp_bsilver, pp_bgold, pp_bbishop, pp_brook,
+		-1, pp_bgold, pp_bgold,  pp_bgold,   pp_bgold,   -1,       pp_bhorse,  pp_bdragon,
+		-1, pp_wpawn, pp_wlance, pp_wknight, pp_wsilver, pp_wgold, pp_wbishop, pp_wrook,
+		-1, pp_wgold, pp_wgold,  pp_wgold,   pp_wgold,   -1,       pp_whorse,  pp_wdragon,
+	};
+	static const int kp_tbl[32] = {
+		-1, kp_bpawn, kp_blance, kp_bknight, kp_bsilver, kp_bgold, kp_bbishop, kp_brook,
+		-1, kp_bgold, kp_bgold,  kp_bgold,   kp_bgold,   -1,       kp_bhorse,  kp_bdragon,
+		-1, kp_wpawn, kp_wlance, kp_wknight, kp_wsilver, kp_wgold, kp_wbishop, kp_wrook,
+		-1, kp_wgold, kp_wgold,  kp_wgold,   kp_wgold,   -1,       kp_whorse,  kp_wdragon,
+	};
+	// 駒番号：1～2が玉、3～40が玉以外
+	int nlist  = 0;
+	for (int kn = 3; kn <= 40; kn++) {
+		const int z = knpos[kn];
+		if (!OnBoard(z)) continue;			// 持ち駒除く
+		int index = pp_tbl[knkind[kn]];
+		sq = NanohaTbl::z2sq[z];
+		list0[nlist++] = index + sq;
 
+		score += PcOnSq(sq_bk0, kp_tbl[knkind[kn]       ] + sq);
+		score -= PcOnSq(sq_bk1, kp_tbl[knkind[kn] ^ GOTE] + Inv(sq));
+	}
+#else
 	int sfu_list0[9];
 	int sfu_list1[9];
 	int sfu_nlist = 0;
@@ -438,8 +560,8 @@ int Position::make_list(int * pscore, int list0[NLIST], int list1[NLIST] ) const
 			case GGI:
 				ggi_list0[ggi_nlist] = pp_wsilver + sq;
 				ggi_list1[ggi_nlist] = pp_bsilver + Inv(sq);
-				score += PcOnSq(sq_bk0, kp_wknight + sq);
-				score -= PcOnSq(sq_bk1, kp_bknight + Inv(sq));
+				score += PcOnSq(sq_bk0, kp_wsilver + sq);
+				score -= PcOnSq(sq_bk1, kp_bsilver + Inv(sq));
 				ggi_nlist += 1;
 				break;
 			case SKI:
@@ -502,8 +624,8 @@ int Position::make_list(int * pscore, int list0[NLIST], int list1[NLIST] ) const
 			case GUM:
 				gum_list0[gum_nlist] = pp_whorse + sq;
 				gum_list1[gum_nlist] = pp_bhorse + Inv(sq);
-				score += PcOnSq(sq_bk0, kp_wbishop + sq);
-				score -= PcOnSq(sq_bk1, kp_bbishop + Inv(sq));
+				score += PcOnSq(sq_bk0, kp_whorse + sq);
+				score -= PcOnSq(sq_bk1, kp_bhorse + Inv(sq));
 				gum_nlist += 1;
 				break;
 			case SRY:
@@ -516,8 +638,8 @@ int Position::make_list(int * pscore, int list0[NLIST], int list1[NLIST] ) const
 			case GRY:
 				gry_list0[gry_nlist] = pp_wdragon + sq;
 				gry_list1[gry_nlist] = pp_bdragon + Inv(sq);
-				score += PcOnSq(sq_bk0, kp_wbishop + sq);
-				score -= PcOnSq(sq_bk1, kp_bbishop + Inv(sq));
+				score += PcOnSq(sq_bk0, kp_wdragon + sq);
+				score -= PcOnSq(sq_bk1, kp_bdragon + Inv(sq));
 				gry_nlist += 1;
 				break;
 			case EMP:
@@ -628,19 +750,29 @@ int Position::make_list(int * pscore, int list0[NLIST], int list1[NLIST] ) const
 		list0[nlist] = gry_list0[i];
 		list1[nlist] = gry_list1[i];
 	}
+#endif
 
 	assert( nlist <= NLIST );
+
+{
+	static int disp = 1;
+	if (disp) {
+		disp = 0;
+		for (i = 0; i < nlist; i++) {
+		  printf("%d ", list0[i]);
+		}
+		printf("\n");
+	}
+}
 
 	*pscore += score;
 	return nlist;
 }
-#endif
 
 int Position::evaluate(const Color us) const
 {
-#if !defined(EVAL_MICRO)
 	int list0[NLIST], list1[NLIST];
-	int nlist, score, sq_bk, sq_wk, k0, k1, l0, l1, i, j, sum;
+	int nlist, score, sq_bk, sq_wk, k0, l0, i, j, sum;
 	static int count=0;
 	count++;
 
@@ -687,6 +819,19 @@ int Position::evaluate(const Color us) const
 	score = 0;
 	nlist = make_list( &score, list0, list1 );
 
+#if !defined(EVAL_NANO)
+#if defined(EVAL_SQUARE)
+	for ( i = 0; i < nlist; i++ )
+	{
+		assert(i < nlist);
+		k0 = list0[i];
+		for ( j = i+1; j < nlist; j++ )
+		{
+			l0 = list0[j];
+			sum += PcPcOn( k0, l0 );
+		}
+	}
+#else
 	for ( i = 0; list0[i] < pp_bend; i++ )
 	{
 		assert(i < nlist);
@@ -700,14 +845,16 @@ int Position::evaluate(const Color us) const
 
 	for ( ; i < nlist; i++ )
 	{
-		k1 = list1[i];
+		const int k1 = list1[i];
 		assert(k1 < pp_bend);
 		for ( j = i+1; j < nlist; j++ )
 		{
-			l1 = list1[j];
+			const int l1 = list1[j];
 			sum -= PcPcOn( k1, l1 );
 		}
 	}
+#endif
+#endif
 
 	score += sum;
 	score /= FV_SCALE;
@@ -717,9 +864,6 @@ int Position::evaluate(const Color us) const
 	score = (us == BLACK) ? score : -score;
 
 	return score;
-#else
-	return (us == BLACK) ? MATERIAL : -(MATERIAL);
-#endif
 }
 
 Value evaluate(const Position& pos, Value& margin)

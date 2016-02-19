@@ -2,7 +2,7 @@
   NanohaMini, a USI shogi(japanese-chess) playing engine derived from Stockfish 2.1
   Copyright (C) 2004-2008 Tord Romstad (Glaurung author)
   Copyright (C) 2008-2010 Marco Costalba, Joona Kiiski, Tord Romstad (Stockfish author)
-  Copyright (C) 2014 Kazuyuki Kawabata
+  Copyright (C) 2014-2015 Kazuyuki Kawabata
 
   NanohaMini is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -21,6 +21,49 @@
 #include <cassert>
 #include "movegen.h"
 #include "position.h"
+
+#define USE_M3HASH
+
+#if defined(USE_M3HASH)
+#define MATE3_MASK              0x07ffffU	/* 8 * 64K = 512K entry */
+
+namespace {
+struct Mate3_Hash {
+	uint64_t word1, word2;				// word1:key, word2:0-31=black_hand, word2:32-63=move
+} mate3_hash_tbl[ MATE3_MASK + 1 ];
+
+bool probe_m3hash(const Position& pos, Move &m)
+{
+	uint64_t word1, word2;
+	const uint64_t key = pos.get_key();
+	const uint32_t h = pos.handValue<BLACK>();
+	const uint32_t index = static_cast<uint32_t>(key) ^ h ^ (h >> 15);
+	const Mate3_Hash now = mate3_hash_tbl[index & MATE3_MASK];
+	word1 = now.word1 ^ now.word2;
+	word2 = now.word2;
+
+	if (word1 != key || static_cast<uint32_t>(word2) != pos.handValue<BLACK>()) {
+		return false;
+	}
+	m = static_cast<Move>(word2 >> 32);
+	return true;
+}
+
+void store_m3hash(const Position& pos, const Move m)
+{
+	Mate3_Hash now;
+	const uint64_t key = pos.get_key();
+	const uint32_t h = pos.handValue<BLACK>();
+	now.word2 = static_cast<uint64_t>(h) | (static_cast<uint64_t>(m) << 32);
+	now.word1 = key ^ now.word2;
+
+	const uint32_t index = static_cast<uint32_t>(key) ^ h ^ (h >> 15);
+	mate3_hash_tbl[index & MATE3_MASK] = now;
+}
+
+}
+
+#endif
 
 //
 //  ‹Ê‚Æ‚ÌˆÊ’uŠÖŒW
@@ -1753,6 +1796,12 @@ int Position::Mate3(const Color us, Move &m)
 		if (val == VALUE_MATE) return val;
 	}
 
+#if defined(USE_M3HASH)
+	if (probe_m3hash(*this, m)) {
+		return m == MOVE_NONE ? -VALUE_MATE : VALUE_MATE;
+	}
+#endif
+
 	MoveStack moves[256]; 	// [‚³3’ö“x‚È‚ç\•ª‚È‘å‚«‚³
 	MoveStack *cur, *last;
 	bool bUchifudume = false;
@@ -1767,8 +1816,7 @@ int Position::Mate3(const Color us, Move &m)
 		StateInfo newSt;
 		Move move = cur->move;
 		// Žc‚è‚RŽè‚Å‚Í‘Å‚¿•à‹l‚ß‚ð‰ñ”ð‚·‚é•K—v‚Í‚È‚¢‚½‚ßA•s¬‚Í“Ç‚Ü‚È‚¢
-//		if ((m & MOVE_CHECK_NARAZU) && isUchifudume == false) continue;
-		if ((m & MOVE_CHECK_NARAZU)) continue;
+		if ((move & MOVE_CHECK_NARAZU)) continue;
 		do_move(move, newSt);
 		int val;
 		val = EvasionRest2(flip(us), last);
@@ -1777,10 +1825,16 @@ int Position::Mate3(const Color us, Move &m)
 		if (val > valmax) valmax = val;
 		if (valmax == VALUE_MATE) {
 			m = move;
+#if defined(USE_M3HASH)
+			store_m3hash(*this, move);
+#endif
 			return VALUE_MATE; //‹l‚ñ‚¾
 		}
 	}
 
+#if defined(USE_M3HASH)
+			store_m3hash(*this, MOVE_NONE);
+#endif
 	return valmax;
 }
 

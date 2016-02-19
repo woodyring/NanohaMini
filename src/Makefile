@@ -138,11 +138,13 @@ ifeq ($(COMP),clang)
 endif
 
 ### 3.2 General compiler settings
-WARNFLAGS = 
-#WARNFLAGS = -Wcast-qual -Weffc++ -Wenum-compare -Wold-style-cast -Wparentheses \
-#	-Wsequence-point -Wsign-conversion -Wsign-promo -Wswitch -Wswitch-default -Wswitch-enum
+WARNFLAGS = -Wfloat-equal -Wformat -Wswitch -Wswitch-default -Wswitch-enum
+#WARNFLAGS = -Wno-system-headers -Wcast-qual -Weffc++ -Wenum-compare \
+#	-Wold-style-cast -Wparentheses -Wconversion \
+#	-Wdiv-by-zero -Wendif-labels -Wfloat-equal -Wformat \
+#	-Wsequence-point -Wsign-compare -Wsign-conversion -Wsign-promo -Wswitch -Wswitch-default -Wswitch-enum
 #CXXFLAGS = -g -Wall $(WARNFLAGS) -fno-exceptions -fno-rtti $(EXTRACXXFLAGS) -DEVAL_OLD -DNANOHA -DCHK_PERFORM -DPROMOTE_AS_CAPTURE
-CXXFLAGS = -O3 -DNDEBUG -Wall $(WARNFLAGS) -fno-exceptions -fno-rtti $(EXTRACXXFLAGS) -DEVAL_OLD -DNANOHA -DCHK_PERFORM -DPROMOTE_AS_CAPTURE
+CXXFLAGS = -O3 -DNDEBUG -Wall $(WARNFLAGS) -fno-exceptions -fno-rtti $(EXTRACXXFLAGS) -DEVAL_MINI -DNANOHA -DCHK_PERFORM -DPROMOTE_AS_CAPTURE
 
 ifeq ($(comp),gcc)
 	CXXFLAGS += -ansi -pedantic -Wno-long-long -Wextra -Wshadow

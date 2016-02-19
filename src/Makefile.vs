@@ -1,25 +1,35 @@
 #
 # ‚È‚Ì‚Ímini‚É‚·‚é‚Æ‚«‚ÍNANOHAMINI=1‚Ì‘O‚Ì#‚ðŽæ‚èA
-# ‚È‚Ì‚Ímicro‚É‚·‚é‚Æ‚«‚ÍNANOHAMINI=1‚Ì‘O‚É#‚ð•t‚¯ANANOHAMICRO=1‚Ì‘O‚Ì#‚ðŽæ‚é
+# ‚È‚Ì‚Ínano‚É‚·‚é‚Æ‚«‚ÍNANOHAMINI=1‚Ì‘O‚É#‚ð•t‚¯ANANOHANANO=1‚Ì‘O‚Ì#‚ðŽæ‚é
+# nanopery‚É‚·‚é‚Æ‚«‚ÍNANOPERY=1‚Ì‘O‚Ì#‚ðŽæ‚é
 #
 NANOHAMINI=1
-#NANOHAMICRO=1
+#NANOHANANO=1
+#NANOPERY=1
 
 !IFDEF NANOHAMINI
-EVAL_TYPE=EVAL_OLD
+EVAL_TYPE=EVAL_MINI
+EVAL_OBJ=evaluate.obj
 EXE = nanohamini.exe
 PGD = nanohamini.pgd
 PGOLOG = nanohamini_prof.txt
-!ELSEIFDEF NANOHAMICRO
-EVAL_TYPE=EVAL_MICRO
-EXE = nanohamicro.exe
-PGD = nanohamicro.pgd
-PGOLOG = nanohamicro_prof.txt
+!ELSEIFDEF NANOHANANO
+EVAL_TYPE=EVAL_NANO
+EVAL_OBJ=evaluate.obj
+EXE = nanohanano.exe
+PGD = nanohanano.pgd
+PGOLOG = nanohanano_prof.txt
+!ELSEIFDEF NANOPERY
+EVAL_TYPE=EVAL_APERY
+EVAL_OBJ=evaluate_apery.obj
+EXE = nanopery.exe
+PGD = nanopery.pgd
+PGOLOG = nanopery_prof.txt
 !ELSE
 !ERROR undefined eval_type
 !ENDIF
 
-OBJS = mate1ply.obj misc.obj timeman.obj evaluate.obj position.obj \
+OBJS = mate1ply.obj misc.obj timeman.obj $(EVAL_OBJ) position.obj \
 	 tt.obj main.obj move.obj \
 	 movegen.obj search.obj uci.obj movepick.obj thread.obj ucioption.obj \
 	 benchmark.obj book.obj \
@@ -32,8 +42,9 @@ LD=link
 
 # Compile Options
 #
-# -DEVAL_OLD        ‚È‚Ì‚Ímini(2‹îŠÖŒW‚Ì•]‰¿ŠÖ”)
-# -DEVAL_MICRO      ‚È‚Ì‚Ímicro(‹î“¾‚Ì‚Ý‚Ì•]‰¿ŠÖ”)
+# -DEVAL_MINI      ‚È‚Ì‚Ímini(2‹îŠÖŒW(KP+PP)‚Ì•]‰¿ŠÖ”)
+# -DEVAL_NANO      ‚È‚Ì‚Ínano(2‹îŠÖŒW(KP‚Ì‚Ý)‚Ì•]‰¿ŠÖ”)
+# -DEVAL_APERY     nanopery(Apery‚Ì•]‰¿ŠÖ”)
 #
 # Visual C++ƒIƒvƒVƒ‡ƒ“
 #
@@ -77,7 +88,7 @@ clean :
 
 pgo: $(OBJS)
 	$(LD) $(PGOLDFLAGS1) $(OBJS) User32.lib
-	$(EXE) bench 128 2 9
+	$(EXE) bench 256 1 9
 	pgomgr /merge $(PGD)
 	pgomgr /summary $(PGD) > $(PGOLOG)
 	$(LD) $(PGOLDFLAGS2) $(OBJS) User32.lib
