@@ -286,14 +286,14 @@ public:
 	template <Color> MoveStack* generate_legal(MoveStack* mlist) const;
 
 	// 王手関連
-	MoveStack* gen_check_long(const Color us, MoveStack* mlist) const;
-	MoveStack* gen_check_short(const Color us, MoveStack* mlist) const;
-	MoveStack* gen_check_drop(const Color us, MoveStack* mlist, bool &bUchifudume) const;
-	MoveStack* generate_check(const Color us, MoveStack* mlist, bool &bUchifudume) const;
+	template <Color> MoveStack* gen_check_long(MoveStack* mlist) const;
+	template <Color> MoveStack* gen_check_short(MoveStack* mlist) const;
+	template <Color> MoveStack* gen_check_drop(MoveStack* mlist, bool &bUchifudume) const;
+	template <Color> MoveStack* generate_check(MoveStack* mlist, bool &bUchifudume) const;
 
 	// 3手詰め用の手生成
-	MoveStack* gen_check_drop3(const Color us, MoveStack* mlist, bool &bUchifudume) const;
-	MoveStack* generate_check3(const Color us, MoveStack* mlist, bool &bUchifudume) const;			// 王手生成
+	template <Color> MoveStack* gen_check_drop3(MoveStack* mlist, bool &bUchifudume) const;
+	template <Color> MoveStack* generate_check3(MoveStack* mlist, bool &bUchifudume) const;			// 王手生成
 	// 王手回避手の生成(3手詰め残り2手用)
 	MoveStack *generate_evasion_rest2(const Color us, MoveStack *mBuf, effect_t effect, int &Ai);
 	MoveStack *generate_evasion_rest2_MoveAi(const Color us, MoveStack *mBuf, effect_t effect);
@@ -417,7 +417,6 @@ public:
 	static unsigned char relate_pos(int z1, int z2) {return DirTbl[z1][z2];}	// z1とz2の位置関係.
 #endif
 private:
-
 	// Initialization helper functions (used while setting up a position)
 	void clear();
 	void put_piece(Piece p, Square s);
@@ -425,8 +424,10 @@ private:
 	void set_castle(int f, Square ksq, Square rsq);
 	void set_castling_rights(char token);
 #endif
+public:
 	bool move_is_legal(const Move m) const;
 
+private:
 #if defined(NANOHA)
 	void init_position(const unsigned char board_ori[9][9], const int Mochigoma_ori[]);
 	void make_pin_info();

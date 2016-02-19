@@ -255,7 +255,8 @@ MoveStack* generate<MV_CHECK>(const Position& pos, MoveStack* mlist)
 	Color us = pos.side_to_move();
 
 	bool bUchifudume = false;
-	mlist = pos.generate_check(us, mlist, bUchifudume);
+	mlist = (us == BLACK) ? pos.generate_check<BLACK>(mlist, bUchifudume)
+	                      : pos.generate_check<WHITE>(mlist, bUchifudume);
 
 	return mlist;
 }

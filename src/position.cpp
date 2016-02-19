@@ -706,6 +706,8 @@ void Position::print_csa(Move move) const {
 	if (move != MOVE_NONE)
 	{
 		cout << "\nMove is: " << move_to_csa(move) << endl;
+	} else {
+		cout << "\nMove is: NONE" << endl;
 	}
 	// 盤面
 	for (Rank rank = RANK_1; rank <= RANK_9; rank++)
@@ -855,7 +857,7 @@ Bitboard Position::attacks_from(Piece p, Square s, Bitboard occ) {
 /// 攻撃するかテストする
 bool Position::move_attacks_square(Move m, Square s) const {
 
-	assert(is_ok(m));
+	assert(::is_ok(m));
 	assert(square_is_ok(s));
 
 	Bitboard occ, xray;
@@ -887,7 +889,7 @@ bool Position::move_attacks_square(Move m, Square s) const {
 #else
 bool Position::pl_move_is_legal(Move m, Bitboard pinned) const {
 
-	assert(is_ok(m));
+	assert(::is_ok(m));
 	assert(pinned == pinned_pieces());
 
 	Color us = side_to_move();
@@ -1089,7 +1091,7 @@ bool Position::is_pseudo_legal(const Move m) const {
 #if !defined(NANOHA)
 bool Position::move_gives_check(Move m, const CheckInfo& ci) const {
 
-	assert(is_ok(m));
+	assert(::is_ok(m));
 	assert(ci.dcCandidates == discovered_check_candidates());
 	assert(color_of(piece_on(move_from(m))) == side_to_move());
 
@@ -1190,7 +1192,7 @@ void Position::do_move(Move m, StateInfo& newSt) {
 
 void Position::do_move(Move m, StateInfo& newSt, const CheckInfo& ci, bool moveIsCheck) {
 
-	assert(is_ok(m));
+	assert(::is_ok(m));
 	assert(&newSt != st);
 
 	nodes++;
@@ -1459,7 +1461,7 @@ void Position::do_capture_move(Key& key, PieceType capture, Color them, Square t
 
 void Position::do_castle_move(Move m) {
 
-	assert(is_ok(m));
+	assert(::is_ok(m));
 	assert(is_castle(m));
 
 	Color us = side_to_move();
@@ -1557,7 +1559,7 @@ void Position::do_castle_move(Move m) {
 
 void Position::undo_move(Move m) {
 
-	assert(is_ok(m));
+	assert(::is_ok(m));
 
 	sideToMove = flip(sideToMove);
 
@@ -1660,7 +1662,7 @@ void Position::undo_move(Move m) {
 
 void Position::undo_castle_move(Move m) {
 
-	assert(is_ok(m));
+	assert(::is_ok(m));
 	assert(is_castle(m));
 
 	// When we have arrived here, some work has already been done by
@@ -1826,7 +1828,7 @@ static int SEERec(int kind, int *attacker, int *defender)
 
 int Position::see_sign(Move m) const {
 
-	assert(is_ok(m));
+	assert(::is_ok(m));
 
 	Square from = move_from(m);
 	Square to = move_to(m);
@@ -1849,7 +1851,7 @@ int Position::see_sign(Move m) const {
 
 int Position::see(Move m) const {
 
-	assert(is_ok(m));
+	assert(::is_ok(m));
 #if defined(NANOHA)
 	//  value = 成りによる加点 + 取りによる加点;
 	int from = move_from(m);
@@ -1951,7 +1953,7 @@ int Position::see(Move m) const {
 	PieceType capturedType, pt;
 	Color stm;
 
-	assert(is_ok(m));
+	assert(::is_ok(m));
 
 	// As castle moves are implemented as capturing the rook, they have
 	// SEE == RookValueMidgame most of the times (unless the rook is under
@@ -2254,17 +2256,22 @@ bool Position::is_draw(int& ret) const {
 	{
 		StateInfo* stp = st->previous->previous;
 		int rept = 0;
-		bool cont_check = (st->effect && stp->effect) ? true : false;
+		// 王手をかけている
+		bool cont_checking = (st->effect && stp->effect) ? true : false;
+		// 王手をかけられている
+		bool cont_checked  = (st->previous->effect && stp->previous->effect) ? true : false;
 
 		do {
 			stp = stp->previous->previous;
-			if (stp->effect == 0) cont_check = false;
+			if (stp->effect           == 0) cont_checking = false;
+			if (stp->previous->effect == 0) cont_checked  = false;
 
 			if (stp->key == st->key && stp->hand == st->hand) {
 				rept++;
 				// 過去に3回(現局面含めて4回)出現していたら千日手.
 				if (rept >= 3) {
-					if (cont_check) {ret = 1; return false; }
+					if (cont_checking) {ret =  1; return false; }
+					if (cont_checked)  {ret = -1; return false; }
 					return true;
 				}
 			}

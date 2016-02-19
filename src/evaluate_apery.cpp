@@ -383,7 +383,7 @@ int Position::make_list_apery(int list0[NLIST], int list1[NLIST], int nlist) con
 int Position::evaluate(const Color us) const
 {
 	int list0[NLIST], list1[NLIST];
-	int score, sq_bk, sq_wk, i, j;
+	int score, sq_bk, sq_wk;
 	static int count=0;
 	count++;
 	int nlist=0;
@@ -422,14 +422,14 @@ int Position::evaluate(const Color us) const
 	const auto* ppkppw = fv_kpp[Inv(sq_wk)];
 
 	score = fv_kk[sq_bk][sq_wk];
-	for ( i = 0; i < nlist; i++ ) {
+	for (int i = 0; i < nlist; i++ ) {
 		const int k0 = list0[i];
 		const int k1 = list1[i];
 		assert(0 <= k0 && k0 < fe_end);
 		assert(0 <= k1 && k1 < fe_end);
 		const auto* pkppb = ppkppb[k0];
 		const auto* pkppw = ppkppw[k1];
-		for ( j = 0; j < i; j++ ) {
+		for (int j = 0; j < i; j++ ) {
 			const int l0 = list0[j];
 			const int l1 = list1[j];
 			assert(0 <= l0 && l0 < fe_end);

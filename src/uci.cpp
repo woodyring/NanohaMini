@@ -45,7 +45,8 @@ namespace {
 	// Keep track of position keys along the setup moves (from start position to the
 	// position just before to start searching). This is needed by draw detection
 	// where, due to 50 moves rule, we need to check at most 100 plies back.
-	StateInfo StateRingBuf[102], *SetupState = StateRingBuf;
+	// 256Žèƒ‹[ƒ‹‚Ì‚½‚ßA256+4‚É•ÏX.
+	StateInfo StateRingBuf[256+4], *SetupState = StateRingBuf;
 
 	void set_option(istringstream& up);
 	void set_position(Position& pos, istringstream& up);
@@ -201,7 +202,7 @@ namespace {
 			pos.do_move(m, *SetupState);
 
 			// Increment pointer to StateRingBuf circular buffer
-			if (++SetupState - StateRingBuf >= 102)
+			if (++SetupState - StateRingBuf >= 256+4)
 				SetupState = StateRingBuf;
 		}
 	}

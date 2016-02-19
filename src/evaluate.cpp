@@ -772,7 +772,7 @@ int Position::make_list(int * pscore, int list0[NLIST], int list1[NLIST] ) const
 int Position::evaluate(const Color us) const
 {
 	int list0[NLIST], list1[NLIST];
-	int nlist, score, sq_bk, sq_wk, k0, l0, i, j, sum;
+	int nlist, score, sq_bk, sq_wk, sum;
 	static int count=0;
 	count++;
 
@@ -821,24 +821,25 @@ int Position::evaluate(const Color us) const
 
 #if !defined(EVAL_NANO)
 #if defined(EVAL_SQUARE)
-	for ( i = 0; i < nlist; i++ )
+	for (int i = 0; i < nlist; i++ )
 	{
 		assert(i < nlist);
-		k0 = list0[i];
-		for ( j = i+1; j < nlist; j++ )
+		const int k0 = list0[i];
+		for (int j = i+1; j < nlist; j++ )
 		{
-			l0 = list0[j];
+			const int l0 = list0[j];
 			sum += PcPcOn( k0, l0 );
 		}
 	}
 #else
-	for ( i = 0; list0[i] < pp_bend; i++ )
+	int i;
+	for (i = 0; list0[i] < pp_bend; i++ )
 	{
 		assert(i < nlist);
-		k0 = list0[i];
-		for ( j = i+1; j < nlist; j++ )
+		const int k0 = list0[i];
+		for (int j = i+1; j < nlist; j++ )
 		{
-			l0 = list0[j];
+			const int l0 = list0[j];
 			sum += PcPcOn( k0, l0 );
 		}
 	}
@@ -847,7 +848,7 @@ int Position::evaluate(const Color us) const
 	{
 		const int k1 = list1[i];
 		assert(k1 < pp_bend);
-		for ( j = i+1; j < nlist; j++ )
+		for (int j = i+1; j < nlist; j++ )
 		{
 			const int l1 = list1[j];
 			sum -= PcPcOn( k1, l1 );

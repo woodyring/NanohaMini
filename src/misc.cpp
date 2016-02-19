@@ -59,13 +59,13 @@ using namespace std;
 #if defined(NANOHA)
 #if defined(EVAL_NANO)
 static const string AppName = "NanohaNano";
-static const string EngineVersion = "0.2.2";
+static const string EngineVersion = "0.2.2.1";
 #elif defined(EVAL_MINI)
 static const string AppName = "NanohaMini";
-static const string EngineVersion = "0.2.2";
+static const string EngineVersion = "0.2.2.1";
 #elif defined(EVAL_APERY)
 static const string AppName = "Nanopery";
-static const string EngineVersion = "0.2.2";
+static const string EngineVersion = "0.2.2.1";
 #endif
 #else
 static const string AppName = "Stockfish";

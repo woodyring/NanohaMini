@@ -1,11 +1,28 @@
-EXE = nanohamini.exe
 COMP=mingw
+
+## nanohanano
+#EXE = nanohanano.exe
+#EVAL_TYPE=-DEVAL_NANO
+#EVALOBJ=evaluate.o
+
+## nanohamini
+EXE = nanohamini.exe
+EVAL_TYPE=-DEVAL_MINI
+EVALOBJ=evaluate.o
+
+## nanopery
+#EXE = nanopery.exe
+#EVAL_TYPE=-DEVAL_APERY
+#EVALOBJ=evaluate_apery.o
+
+debug=no
+optimize=yes
 
 ### Built-in benchmark for pgo-builds
 PGOBENCH = ./$(EXE) bench 32 1 10 default depth
 
 ### Object files
-OBJS = mate1ply.o misc.o timeman.o evaluate.o move.o position.o tt.o main.o \
+OBJS = $(EVALOBJ) mate1ply.o misc.o timeman.o move.o position.o tt.o main.o \
 	 movegen.o search.o uci.o movepick.o thread.o ucioption.o \
 	 benchmark.o book.o \
 	 shogi.o mate.o problem.o
@@ -17,9 +34,7 @@ OBJS = mate1ply.o misc.o timeman.o evaluate.o move.o position.o tt.o main.o \
 ### Section 2. High-level Configuration
 ### ==========================================================================
 #
-# -DNDEBUG (DEBUG)     builds release (debug) version of Bonanza.
-# -DHAVE_SSE2 -msse2   use SSE2 instructions for speed
-# -DHAVE_SSE4 -msse4.1 use SSE2 and SSE4.1 instructions for speed
+# -DNDEBUG (DEBUG)     builds release (debug) version.
 # -DUSE_PREFETCH       use prefetch x86 asm-instruction
 # -DUSE_BSFQ           use bsfq x86_64 asm-instruction
 # -DUSE_POPCNT         use popcnt x86_64 asm-instruction
@@ -143,8 +158,8 @@ WARNFLAGS = -Wfloat-equal -Wformat -Wswitch -Wswitch-default -Wswitch-enum
 #	-Wold-style-cast -Wparentheses -Wconversion \
 #	-Wdiv-by-zero -Wendif-labels -Wfloat-equal -Wformat \
 #	-Wsequence-point -Wsign-compare -Wsign-conversion -Wsign-promo -Wswitch -Wswitch-default -Wswitch-enum
-#CXXFLAGS = -g -Wall $(WARNFLAGS) -fno-exceptions -fno-rtti $(EXTRACXXFLAGS) -DEVAL_OLD -DNANOHA -DCHK_PERFORM -DPROMOTE_AS_CAPTURE
-CXXFLAGS = -O3 -DNDEBUG -Wall $(WARNFLAGS) -fno-exceptions -fno-rtti $(EXTRACXXFLAGS) -DEVAL_MINI -DNANOHA -DCHK_PERFORM -DPROMOTE_AS_CAPTURE
+CXXFLAGS = -Wall -std=gnu++11 $(WARNFLAGS) -fno-exceptions -fno-rtti $(EXTRACXXFLAGS) $(EVAL_TYPE) -DNANOHA -DCHK_PERFORM -DPROMOTE_AS_CAPTURE
+#CXXFLAGS = -O3 -DNDEBUG -Wall $(WARNFLAGS) -fno-exceptions -fno-rtti $(EXTRACXXFLAGS) -DEVAL_MINI -DNANOHA -DCHK_PERFORM -DPROMOTE_AS_CAPTURE
 
 ifeq ($(comp),gcc)
 	CXXFLAGS += -ansi -pedantic -Wno-long-long -Wextra -Wshadow
@@ -175,6 +190,8 @@ endif
 ### 3.4 Debugging
 ifeq ($(debug),no)
 	CXXFLAGS += -DNDEBUG
+else
+	CXXFLAGS += -g -DDEBUG
 endif
 
 ### 3.5 Optimization

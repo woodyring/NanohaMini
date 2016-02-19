@@ -54,15 +54,15 @@ typedef unsigned __int64 uint64_t;
 #endif
 
 #ifndef UINT64_C
-#if defined(_MSC_VER)
-#define UINT64_C(x)	(x ## UI64)
-#define PRI64	"%I64d"
-#define PRIx64	"%I64x"
-#else
 #define UINT64_C(x)	(x ## llu)
-#define PRI64	"%lld"
-#define PRIx64	"%llx"
 #endif
+
+#ifndef PRI64
+#define PRI64	"%lld"
+#endif
+
+#ifndef PRIx64
+#define PRIx64	"%llx"
 #endif
 
 #define Min(x, y) (((x) < (y)) ? (x) : (y))

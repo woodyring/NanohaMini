@@ -834,14 +834,14 @@ void Position::do_move(Move m, StateInfo& newSt)
 	const Square to = move_to(m);
 	bool pm = is_promotion(m);
 
-	Piece piece = piece_on(from);
+	Piece piece = move_piece(m);
 	Piece capture = piece_on(to);
 	int kn;
 	unsigned long id;
 	unsigned long tkiki;
 
-	assert(color_of_piece_on(from) == us);
-	assert(color_of(piece_on(to)) == them || square_is_empty(to));
+	assert(color_of(piece_on(from)) == us);
+	assert(square_is_empty(to) || color_of(piece_on(to)) != us);
 
 	// ピン情報のクリア
 	if (piece == SOU) {
@@ -1248,7 +1248,7 @@ void Position::undo_move(Move m) {
 #else
 	assert(is_ok());
 #endif
-	assert(move_is_ok(m));
+	assert(::is_ok(m));
 
 	sideToMove = flip(sideToMove);
 
@@ -1269,7 +1269,7 @@ void Position::undo_move(Move m) {
 	unsigned long tkiki;
 
 	assert(square_is_empty(from));
-	assert(color_of_piece_on(to) == us);
+	assert(color_of(piece_on(to)) == us);
 
 	// ピン情報のクリア
 	if (piece == SOU) {
@@ -1552,7 +1552,7 @@ void Position::undo_drop(Move m)
 	unsigned long id;
 	unsigned long tkiki;
 
-	assert(color_of_piece_on(to) == us);
+	assert(color_of(piece_on(to)) == us);
 
 	// 移動元、移動先が玉の延長線上にあったときにそこのピン情報を削除する
 	if (EFFECT_KING_S(to)) {
@@ -1699,12 +1699,13 @@ uint64_t Position::calc_hash_no_move(const Move m) const
 // 指し手が王手かどうかチェックする
 bool Position::is_check_move(const Color us, Move m) const
 {
-	const Square kPos = (us == BLACK) ? Square(kingG) : Square(kingS);	// 相手側の玉の位置
+	const Square ksq = (us == BLACK) ? Square(kingG) : Square(kingS);	// 相手側の玉の位置
 
-	return move_attacks_square(m, kPos);
+	return move_attacks_square(m, ksq);
 }
 
-bool Position::move_attacks_square(Move m, Square kPos) const
+// 指し手mによって、升目sqに利きがつくか？
+bool Position::move_attacks_square(Move m, Square sq) const
 {
 	const Color us = side_to_move();
 	const effect_t *akiki = (us == BLACK) ? effectB : effectW;	// 自分の利き
@@ -1714,114 +1715,114 @@ bool Position::move_attacks_square(Move m, Square kPos) const
 	switch (piece) {
 	case EMP:break;
 	case SFU:
-		if (to + DIR_UP == kPos) return true;
+		if (to + DIR_UP == sq) return true;
 		break;
 	case SKY:
-		if (DirTbl[to][kPos] == EFFECT_UP) {
-			if (SkipOverEMP(to, DIR_UP) == kPos) return true;
+		if (DirTbl[to][sq] == EFFECT_UP) {
+			if (SkipOverEMP(to, DIR_UP) == sq) return true;
 		}
 		break;
 	case SKE:
-		if (to + DIR_KEUR == kPos) return true;
-		if (to + DIR_KEUL == kPos) return true;
+		if (to + DIR_KEUR == sq) return true;
+		if (to + DIR_KEUL == sq) return true;
 		break;
 	case SGI:
-		if (to + DIR_UP == kPos) return true;
-		if (to + DIR_UR == kPos) return true;
-		if (to + DIR_UL == kPos) return true;
-		if (to + DIR_DR == kPos) return true;
-		if (to + DIR_DL == kPos) return true;
+		if (to + DIR_UP == sq) return true;
+		if (to + DIR_UR == sq) return true;
+		if (to + DIR_UL == sq) return true;
+		if (to + DIR_DR == sq) return true;
+		if (to + DIR_DL == sq) return true;
 		break;
 	case SKI:
 	case STO:
 	case SNY:
 	case SNK:
 	case SNG:
-		if (to + DIR_UP    == kPos) return true;
-		if (to + DIR_UR    == kPos) return true;
-		if (to + DIR_UL    == kPos) return true;
-		if (to + DIR_RIGHT == kPos) return true;
-		if (to + DIR_LEFT  == kPos) return true;
-		if (to + DIR_DOWN  == kPos) return true;
+		if (to + DIR_UP    == sq) return true;
+		if (to + DIR_UR    == sq) return true;
+		if (to + DIR_UL    == sq) return true;
+		if (to + DIR_RIGHT == sq) return true;
+		if (to + DIR_LEFT  == sq) return true;
+		if (to + DIR_DOWN  == sq) return true;
 		break;
 
 	case GFU:
-		if (to + DIR_DOWN == kPos) return true;
+		if (to + DIR_DOWN == sq) return true;
 		break;
 	case GKY:
-		if (DirTbl[to][kPos] == EFFECT_DOWN) {
-			if (SkipOverEMP(to, DIR_DOWN) == kPos) return true;
+		if (DirTbl[to][sq] == EFFECT_DOWN) {
+			if (SkipOverEMP(to, DIR_DOWN) == sq) return true;
 		}
 		break;
 	case GKE:
-		if (to + DIR_KEDR == kPos) return true;
-		if (to + DIR_KEDL == kPos) return true;
+		if (to + DIR_KEDR == sq) return true;
+		if (to + DIR_KEDL == sq) return true;
 		break;
 	case GGI:
-		if (to + DIR_DOWN == kPos) return true;
-		if (to + DIR_DR   == kPos) return true;
-		if (to + DIR_DL   == kPos) return true;
-		if (to + DIR_UR   == kPos) return true;
-		if (to + DIR_UL   == kPos) return true;
+		if (to + DIR_DOWN == sq) return true;
+		if (to + DIR_DR   == sq) return true;
+		if (to + DIR_DL   == sq) return true;
+		if (to + DIR_UR   == sq) return true;
+		if (to + DIR_UL   == sq) return true;
 		break;
 	case GKI:
 	case GTO:
 	case GNY:
 	case GNK:
 	case GNG:
-		if (to + DIR_DOWN  == kPos) return true;
-		if (to + DIR_DR    == kPos) return true;
-		if (to + DIR_DL    == kPos) return true;
-		if (to + DIR_RIGHT == kPos) return true;
-		if (to + DIR_LEFT  == kPos) return true;
-		if (to + DIR_UP    == kPos) return true;
+		if (to + DIR_DOWN  == sq) return true;
+		if (to + DIR_DR    == sq) return true;
+		if (to + DIR_DL    == sq) return true;
+		if (to + DIR_RIGHT == sq) return true;
+		if (to + DIR_LEFT  == sq) return true;
+		if (to + DIR_UP    == sq) return true;
 		break;
 
 	case SUM:
 	case GUM:
-		if (to + DIR_UP    == kPos) return true;
-		if (to + DIR_RIGHT == kPos) return true;
-		if (to + DIR_LEFT  == kPos) return true;
-		if (to + DIR_DOWN  == kPos) return true;
+		if (to + DIR_UP    == sq) return true;
+		if (to + DIR_RIGHT == sq) return true;
+		if (to + DIR_LEFT  == sq) return true;
+		if (to + DIR_DOWN  == sq) return true;
 		// Through
 	case SKA:
 	case GKA:
-		if ((DirTbl[to][kPos] & (EFFECT_UR | EFFECT_UL | EFFECT_DR | EFFECT_DL)) != 0) {
-			if ((DirTbl[to][kPos] & EFFECT_UR) != 0) {
-				if (SkipOverEMP(to, DIR_UR) == kPos) return true;
+		if ((DirTbl[to][sq] & (EFFECT_UR | EFFECT_UL | EFFECT_DR | EFFECT_DL)) != 0) {
+			if ((DirTbl[to][sq] & EFFECT_UR) != 0) {
+				if (SkipOverEMP(to, DIR_UR) == sq) return true;
 			}
-			if ((DirTbl[to][kPos] & EFFECT_UL) != 0) {
-				if (SkipOverEMP(to, DIR_UL) == kPos) return true;
+			if ((DirTbl[to][sq] & EFFECT_UL) != 0) {
+				if (SkipOverEMP(to, DIR_UL) == sq) return true;
 			}
-			if ((DirTbl[to][kPos] & EFFECT_DR) != 0) {
-				if (SkipOverEMP(to, DIR_DR) == kPos) return true;
+			if ((DirTbl[to][sq] & EFFECT_DR) != 0) {
+				if (SkipOverEMP(to, DIR_DR) == sq) return true;
 			}
-			if ((DirTbl[to][kPos] & EFFECT_DL) != 0) {
-				if (SkipOverEMP(to, DIR_DL) == kPos) return true;
+			if ((DirTbl[to][sq] & EFFECT_DL) != 0) {
+				if (SkipOverEMP(to, DIR_DL) == sq) return true;
 			}
 		}
 		break;
 	case SRY:
 	case GRY:
-		if (to + DIR_UR == kPos) return true;
-		if (to + DIR_UL == kPos) return true;
-		if (to + DIR_DR == kPos) return true;
-		if (to + DIR_DL == kPos) return true;
+		if (to + DIR_UR == sq) return true;
+		if (to + DIR_UL == sq) return true;
+		if (to + DIR_DR == sq) return true;
+		if (to + DIR_DL == sq) return true;
 		// Through
 	case SHI:
 	case GHI:
-		if ((DirTbl[to][kPos] & (EFFECT_UP | EFFECT_RIGHT | EFFECT_LEFT | EFFECT_DOWN)) != 0) {
-			if ((DirTbl[to][kPos] & EFFECT_UP) != 0) {
-				if (SkipOverEMP(to, DIR_UP) == kPos) return true;
+		if ((DirTbl[to][sq] & (EFFECT_UP | EFFECT_RIGHT | EFFECT_LEFT | EFFECT_DOWN)) != 0) {
+			if ((DirTbl[to][sq] & EFFECT_UP) != 0) {
+				if (SkipOverEMP(to, DIR_UP) == sq) return true;
 			}
-			if ((DirTbl[to][kPos] & EFFECT_DOWN) != 0) {
-				if (SkipOverEMP(to, DIR_DOWN) == kPos) return true;
+			if ((DirTbl[to][sq] & EFFECT_DOWN) != 0) {
+				if (SkipOverEMP(to, DIR_DOWN) == sq) return true;
 			}
-			if ((DirTbl[to][kPos] & EFFECT_RIGHT) != 0) {
-				if (SkipOverEMP(to, DIR_RIGHT) == kPos) return true;
+			if ((DirTbl[to][sq] & EFFECT_RIGHT) != 0) {
+				if (SkipOverEMP(to, DIR_RIGHT) == sq) return true;
 			}
-			if ((DirTbl[to][kPos] & EFFECT_LEFT) != 0) {
-				if (SkipOverEMP(to, DIR_LEFT) == kPos) return true;
+			if ((DirTbl[to][sq] & EFFECT_LEFT) != 0) {
+				if (SkipOverEMP(to, DIR_LEFT) == sq) return true;
 			}
 		}
 		break;
@@ -1833,14 +1834,15 @@ bool Position::move_attacks_square(Move m, Square kPos) const
 		break;
 	}
 
-	// 駒が移動することによる王手.
+	// 駒が移動することによってsqに利くか.
 	const int from = move_from(m);
 	if (from < 0x11) return false;
-	if ((DirTbl[from][kPos]) & (akiki[from] >> EFFECT_LONG_SHIFT)) {
+	if ((DirTbl[from][sq]) & (akiki[from] >> EFFECT_LONG_SHIFT)) {
+		if (DirTbl[from][sq] == DirTbl[to][sq]) return false;
+
 		unsigned long id;
-		_BitScanForward(&id, DirTbl[from][kPos]);
-		if (from - to == NanohaTbl::Direction[id] || to - from == NanohaTbl::Direction[id]) return false;
-		if (SkipOverEMP(from, NanohaTbl::Direction[id]) == kPos) {
+		_BitScanForward(&id, DirTbl[from][sq]);
+		if (SkipOverEMP(from, NanohaTbl::Direction[id]) == sq) {
 			return true;
 		}
 	}

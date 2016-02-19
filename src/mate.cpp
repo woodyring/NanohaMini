@@ -22,10 +22,25 @@
 #include "movegen.h"
 #include "position.h"
 
-#define USE_M3HASH
+#define USE_M3HASH	// Mate3()結果をハッシュする.
+
+#if !defined(NDEBUG)
+#define DEBUG_MATE2
+#endif
+
+#if defined(DEBUG_MATE2)
+Move pre_check;
+#endif
 
 #if defined(USE_M3HASH)
 #define MATE3_MASK              0x07ffffU	/* 8 * 64K = 512K entry */
+
+// パフォーマンス計測用.
+namespace M3Perform{
+uint64_t called;
+uint64_t hashhit;
+uint64_t override;
+}
 
 namespace {
 struct Mate3_Hash {
@@ -58,11 +73,11 @@ void store_m3hash(const Position& pos, const Move m)
 	now.word1 = key ^ now.word2;
 
 	const uint32_t index = static_cast<uint32_t>(key) ^ h ^ (h >> 15);
+	if (mate3_hash_tbl[index & MATE3_MASK].word1 != 0) M3Perform::override++;
 	mate3_hash_tbl[index & MATE3_MASK] = now;
 }
 
 }
-
 #endif
 
 //
@@ -437,7 +452,8 @@ const struct Position::ST_OuteMove2 Position::OuteMove2[32] = {
 };
 
 // 盤上の跳びのある駒での王手を生成する.
-MoveStack* Position::gen_check_long(const Color us, MoveStack* mlist) const
+template<Color us>
+MoveStack* Position::gen_check_long(MoveStack* mlist) const
 {
 	// 手番側から見て、相手の玉の位置
 	const int enemyKing = (us == BLACK) ? kingG : kingS;
@@ -446,11 +462,8 @@ MoveStack* Position::gen_check_long(const Color us, MoveStack* mlist) const
 	const int ksuji = enemyKing & 0xF0;
 	const int kdan  = enemyKing & 0x0F;
 	int suji, dan;
-	int i;
-	int pos;
 	int dir;
-	int to, from;
-	const int SorG = (us == BLACK) ? SENTE : GOTE;
+	int to;
 
 	// 内容
 	// 飛・龍による王手
@@ -469,15 +482,15 @@ MoveStack* Position::gen_check_long(const Color us, MoveStack* mlist) const
 
 
 	// 飛・龍による王手
-	for (i = 0; i < 2; i++) {
+	for (int hi = 0; hi < 2; hi++) {
+		const int sq = hiPos[hi];
 		// 持駒は処理しない
-		if (!OnBoard(hiPos[i])) continue;
-		pos = hiPos[i];
+		if (!OnBoard(sq)) continue;
 		// 相手の駒は処理しない
-		if (IsNotOwn(ban[pos], SorG)) continue;
+		if (color_of(ban[sq]) != us) continue;
 
-		suji = pos & 0xF0;
-		dan  = pos & 0x0F;
+		suji = sq & 0xF0;
+		dan  = sq & 0x0F;
 		if (suji == ksuji || dan == kdan) {
 			// 1. 飛・龍と玉の間の駒を動かす or 取る (同じ段 or 同じ筋にいて、間の駒が1つ)
 			if (dan > kdan) {
@@ -493,27 +506,18 @@ MoveStack* Position::gen_check_long(const Color us, MoveStack* mlist) const
 			while (ban[to] == EMP) {
 				to = to + dir;
 			}
-			from = to + dir;
-			while (ban[from] == EMP) {
-				from = from + dir;
-			}
-			if (from == hiPos[i]) {
-				if (IsNotOwn(ban[to], SorG)) {
+			if (sq == SkipOverEMP(to, dir)) {
+				if (color_of(ban[to]) != us) {
 					// toにいる駒は敵
-					if ((pin[from]==0 || pin[from]==dir || pin[from]==-dir)) {
-						if (ban[from] == SHI && ((to & 0x0F) <= 3 || (from & 0x0F) <= 3)) {
+					if ((pin[sq]==0 || pin[sq]==dir || pin[sq]==-dir)) {
+						if ((ban[sq] & PROMOTED) == 0 && (can_promotion<us>(to) || can_promotion<us>(sq))) {
 							// 成る手
-							(mlist++)->move = cons_move(from, to, ban[from], ban[to], 1, MOVE_CHECK_LONG);
+							(mlist++)->move = cons_move(sq, to, ban[sq], ban[to], 1, MOVE_CHECK_LONG);
 							// 不成り
-							(mlist++)->move = cons_move(from, to, ban[from], ban[to], 0, MOVE_CHECK_LONG | MOVE_CHECK_NARAZU);
-						} else if ((ban[from] == GHI) && ((to & 0x0F) >= 7 || (from & 0x0F) >= 7)) {
-							// 成る手
-							(mlist++)->move = cons_move(from, to, ban[from], ban[to], 1, MOVE_CHECK_LONG);
-							// 不成り
-							(mlist++)->move = cons_move(from, to, ban[from], ban[to], 0, MOVE_CHECK_LONG | MOVE_CHECK_NARAZU);
+							(mlist++)->move = cons_move(sq, to, ban[sq], ban[to], 0, MOVE_CHECK_LONG | MOVE_CHECK_NARAZU);
 						} else {
 							// 不成り
-							(mlist++)->move = cons_move(from, to, ban[from], ban[to], 0, MOVE_CHECK_LONG);
+							(mlist++)->move = cons_move(sq, to, ban[sq], ban[to], 0, MOVE_CHECK_LONG);
 						}
 					}
 				} else {
@@ -523,51 +527,51 @@ MoveStack* Position::gen_check_long(const Color us, MoveStack* mlist) const
 			}
 		} else {
 			// 2. 飛竜が空いている飛の道にのる(同じ段や同じ筋にいない)
-			int sx = Min(ksuji, suji);
-			int lx = Max(ksuji, suji);
-			int sy = Min(kdan, dan);
-			int ly = Max(kdan, dan);
+			int xmin = Min(ksuji, suji);
+			int xmax = Max(ksuji, suji);
+			int ymin = Min(kdan, dan);
+			int ymax = Max(kdan, dan);
 			int x, y;
 			bool moveH, moveV;
 			moveH = moveV = true;
-			for (x = sx + 16; x < lx; x += 16) {
-				if (ban[x +  dan] != EMP) moveH = false; 
-				if (ban[x + kdan] != EMP) moveV = false;
+			for (x = xmin + 16; x < xmax; x += 16) {
+				if (ban[x +  dan] != EMP) moveH = false;	// 飛の横方向に駒があれば、飛が横に動く王手はない.
+				if (ban[x + kdan] != EMP) moveV = false;	// 玉の横方向に駒があれば、飛が縦に動く王手はない.
 			}
-			for (y = sy + 1; y < ly; y++) {
-				if (ban[ksuji + y] != EMP) moveH = false;
-				if (ban[suji  + y] != EMP) moveV = false;
+			for (y = ymin + 1; y < ymax; y++) {
+				if (ban[ksuji + y] != EMP) moveH = false;	// 玉の縦方向に駒があれば、飛が横に動く王手はない.
+				if (ban[suji  + y] != EMP) moveV = false;	// 飛の縦方向に駒があれば、飛が縦に動く王手はない.
 			}
-			// 飛車を横に動く王手
-			if (moveH
-				&& (ban[ksuji + dan] == EMP || IsNotOwn(ban[ksuji + dan], SorG)) 
-				&& (pin[pos] == 0 || pin[suji+dan] == 16 || pin[suji+dan] == -16)) {
-				if ((ban[pos] == SHI && dan <= 3)
-					|| (ban[pos] == GHI && dan >= 7)) {
-					(mlist++)->move = cons_move(pos, ksuji + dan, ban[pos], ban[ksuji + dan], 1, MOVE_CHECK_LONG);
-					(mlist++)->move = cons_move(pos, ksuji + dan, ban[pos], ban[ksuji + dan], 0, MOVE_CHECK_LONG | MOVE_CHECK_NARAZU);
-				} else {
-					(mlist++)->move = cons_move(pos, ksuji + dan, ban[pos], ban[ksuji + dan], 0, MOVE_CHECK_LONG);
+			// 飛車が横に動く王手
+			if (moveH) {
+				if ((ban[ksuji + dan] == EMP || color_of(ban[ksuji + dan]) != us) 
+				  && (pin[sq] == 0 || pin[sq] == 16 || pin[sq] == -16)) {
+					if ((ban[sq] & PROMOTED) == 0 && can_promotion<us>(sq)) {
+						(mlist++)->move = cons_move(sq, ksuji + dan, ban[sq], ban[ksuji + dan], 1, MOVE_CHECK_LONG);
+						(mlist++)->move = cons_move(sq, ksuji + dan, ban[sq], ban[ksuji + dan], 0, MOVE_CHECK_LONG | MOVE_CHECK_NARAZU);
+					} else {
+						(mlist++)->move = cons_move(sq, ksuji + dan, ban[sq], ban[ksuji + dan], 0, MOVE_CHECK_LONG);
+					}
 				}
 			}
-			// 飛車を縦に動く王手
-			if (moveV
-				&& (ban[suji + kdan] == EMP || IsNotOwn(ban[suji + kdan], SorG)) 
-				&& (pin[pos] == 0 || pin[pos] == 1 || pin[pos] == -1)) {
-				if (((ban[pos] == SHI) && (dan <= 3 || kdan <= 3))
-					|| ((ban[pos] == GHI) && (dan >= 7 || kdan >= 7))) {
-					(mlist++)->move = cons_move(pos, suji + kdan, ban[pos], ban[suji + kdan], 1, MOVE_CHECK_LONG);
-					(mlist++)->move = cons_move(pos, suji + kdan, ban[pos], ban[suji + kdan], 0, MOVE_CHECK_LONG | MOVE_CHECK_NARAZU);
-				} else {
-					(mlist++)->move = cons_move(pos, suji + kdan, ban[pos], ban[suji + kdan], 0, MOVE_CHECK_LONG);
+			// 飛車が縦に動く王手
+			if (moveV) {
+				if ((ban[suji + kdan] == EMP || color_of(ban[suji + kdan]) != us) 
+				  && (pin[sq] == 0 || pin[sq] == 1 || pin[sq] == -1)) {
+					if ((ban[sq] & PROMOTED) == 0 && (can_promotion<us>(sq) || can_promotion<us>(enemyKing))) {
+						(mlist++)->move = cons_move(sq, suji + kdan, ban[sq], ban[suji + kdan], 1, MOVE_CHECK_LONG);
+						(mlist++)->move = cons_move(sq, suji + kdan, ban[sq], ban[suji + kdan], 0, MOVE_CHECK_LONG | MOVE_CHECK_NARAZU);
+					} else {
+						(mlist++)->move = cons_move(sq, suji + kdan, ban[sq], ban[suji + kdan], 0, MOVE_CHECK_LONG);
+					}
 				}
 			}
-			// 竜が斜めに動く手を生成する【課題】
-			if (ban[pos] & PROMOTED)
+			// 竜が斜めに動く手を生成する
+			if (ban[sq] & PROMOTED)
 			for (int dx = -0x10; dx <= 0x10; dx += 0x20) {
 				for (int dy = -1; dy <= 1; dy += 2) {
-					if (pin[pos] != 0 && pin[pos] != dx + dy && pin[pos] != -dx - dy) continue;
-					if (ban[pos+dx+dy] == WALL || (ban[pos+dx+dy] != EMP && !IsNotOwn(ban[pos + dx + dy], SorG))) continue;	// 味方の駒
+					if (pin[sq] != 0 && pin[sq] != dx + dy && pin[sq] != -dx - dy) continue;
+					if (ban[sq+dx+dy] == WALL || (ban[sq+dx+dy] != EMP && color_of(ban[sq + dx + dy]) == us)) continue;	// 味方の駒
 					if (kdan == dan + dy) {
 						//斜めに動いて横に王手
 						int sx = Min(ksuji, suji + dx);
@@ -577,7 +581,7 @@ MoveStack* Position::gen_check_long(const Color us, MoveStack* mlist) const
 							if (ban[x + kdan] != EMP) moveV = false;
 						}
 						if (moveV) {
-							(mlist++)->move = cons_move(pos, pos + dx + dy, ban[pos], ban[pos + dx + dy], 0, MOVE_CHECK_LONG);
+							(mlist++)->move = cons_move(sq, sq + dx + dy, ban[sq], ban[sq + dx + dy], 0, MOVE_CHECK_LONG);
 						}
 					}
 					if (ksuji == suji + dx) {
@@ -589,7 +593,7 @@ MoveStack* Position::gen_check_long(const Color us, MoveStack* mlist) const
 							if (ban[y + ksuji] != EMP) moveH = false;
 						}
 						if (moveH) {
-							(mlist++)->move = cons_move(pos, pos + dx + dy, ban[pos], ban[pos + dx + dy], 0, MOVE_CHECK_LONG);
+							(mlist++)->move = cons_move(sq, sq + dx + dy, ban[sq], ban[sq + dx + dy], 0, MOVE_CHECK_LONG);
 						}
 					}
 				}
@@ -597,29 +601,24 @@ MoveStack* Position::gen_check_long(const Color us, MoveStack* mlist) const
 
 			// 3. 飛が成ること及び竜による王手
 			{
-				static const int Directions[]={16,   1, -16, -1};
+				static const int dirs[]={16,   1, -16, -1};
 				static const int Positions[]={-17, -15,  17, 15};
 
 				int i, j;
 				for (i = 0; i < 4; i++) {
 					to = enemyKing + Positions[i];
-					if (ban[to] != EMP && (ban[to] == WALL || !IsNotOwn(ban[to], SorG))) {	// 味方の駒
+					if (ban[to] != EMP && (ban[to] == WALL || color_of(ban[to]) == us)) {	// 味方の駒
 						continue;
 					}
 					for (j = 0; j < 4; j++) {
-						dir = Directions[j];
-						from = to + dir;
-						while (ban[from] == EMP) {
-							from += dir;
-						}
-						if (from == pos) {
-							if (ban[from] == (SorG | RY) && (pin[from] == 0 || pin[from] == dir || pin[from] == -dir)) {
-								(mlist++)->move = cons_move(from, to, ban[from], ban[to], 0);
-							} else if (ban[from] == (SorG | HI) && (pin[from] == 0 || pin[from] == dir || pin[from] == -dir) && 
-								((us == BLACK && ((from & 0x0f) <= 3 || (to & 0x0f) <= 3))
-								 ||(us != BLACK && ((from & 0x0f) >= 7 || (to & 0x0f) >= 7)))
+						dir = dirs[j];
+						if (sq == SkipOverEMP(to, dir)) {
+							if ((ban[sq] & PROMOTED) && (pin[sq] == 0 || pin[sq] == dir || pin[sq] == -dir)) {
+								(mlist++)->move = cons_move(sq, to, ban[sq], ban[to], 0);
+							} else if ((ban[sq] & PROMOTED) == 0 && (pin[sq] == 0 || pin[sq] == dir || pin[sq] == -dir)
+							  && ((can_promotion<us>(sq) || can_promotion<us>(to)))
 								 ) {
-								(mlist++)->move = cons_move(from, to, ban[from], ban[to], 1);
+								(mlist++)->move = cons_move(sq, to, ban[sq], ban[to], 1);
 							}
 						}
 					}
@@ -629,15 +628,15 @@ MoveStack* Position::gen_check_long(const Color us, MoveStack* mlist) const
 	}
 
 	// 角・馬による王手
-	for (i = 0; i < 2; i++) {
+	for (int ka = 0; ka < 2; ka++) {
+		const int sq = kaPos[ka];
 		// 持駒は処理しない
-		if (!OnBoard(kaPos[i])) continue;
-		pos = kaPos[i];
+		if (!OnBoard(sq)) continue;
 		// 相手の駒は処理しない
-		if (IsNotOwn(ban[pos], SorG)) continue;
+		if (color_of(ban[sq]) != us) continue;
 
-		suji = pos & 0xF0;
-		dan  = pos & 0x0F;
+		suji = sq & 0xF0;
+		dan  = sq & 0x0F;
 
 		// 1. 角・馬と玉の間の駒を動かす or 取る
 		static const int ka_dir[] = {+15, +17};
@@ -645,35 +644,26 @@ MoveStack* Position::gen_check_long(const Color us, MoveStack* mlist) const
 			int i;
 			for (i = 0; i < static_cast<int>(sizeof(ka_dir)/sizeof(ka_dir[0])); i++) {
 				dir = ka_dir[i];
-				if ((pos - enemyKing) % dir == 0) {
+				if ((sq - enemyKing) % dir == 0) {
 					// 角・馬の dir 線上に玉がいる
-					if (pos < enemyKing) dir = -dir;
+					if (sq < enemyKing) dir = -dir;
 					to = enemyKing + dir;
 					while (ban[to] == EMP) {
 						to += dir;
 					}
 					if (ban[to] != WALL) {
-						from = to + dir;
-						while (ban[from] == EMP) {
-							from += dir;
-						}
-						if (from == pos) {
+						if (sq == SkipOverEMP(to, dir)) {
 							// 角・馬と玉の間に1つ駒がある
-							if (IsNotOwn(ban[to], SorG)) {
+							if (color_of(ban[to]) != us) {
 								// toにいる駒は敵
-								if (pin[from] == 0 || pin[from] == dir || pin[from] == -dir) {
-									if (ban[from] == SKA
-										&& ((to & 0x0F) <= 3 || (from & 0x0F) <= 3)) {
+								if (pin[sq] == 0 || pin[sq] == dir || pin[sq] == -dir) {
+									if ((ban[sq] & PROMOTED) == 0
+										&& (can_promotion<us>(to) || can_promotion<us>(sq))) {
 										// 成る手
-										(mlist++)->move = cons_move(from, to, ban[from], ban[to], 1, MOVE_CHECK_LONG);
-										(mlist++)->move = cons_move(from, to, ban[from], ban[to], 0, MOVE_CHECK_LONG | MOVE_CHECK_NARAZU);
-									} else if (ban[from] == GKA
-										&& ((to & 0x0F) >= 7 || (from & 0x0F) >= 7)) {
-										// 成る手
-										(mlist++)->move = cons_move(from, to, ban[from], ban[to], 1, MOVE_CHECK_LONG);
-										(mlist++)->move = cons_move(from, to, ban[from], ban[to], 0, MOVE_CHECK_LONG | MOVE_CHECK_NARAZU);
+										(mlist++)->move = cons_move(sq, to, ban[sq], ban[to], 1, MOVE_CHECK_LONG);
+										(mlist++)->move = cons_move(sq, to, ban[sq], ban[to], 0, MOVE_CHECK_LONG | MOVE_CHECK_NARAZU);
 									} else {
-										(mlist++)->move = cons_move(from, to, ban[from], ban[to], 0, MOVE_CHECK_LONG);
+										(mlist++)->move = cons_move(sq, to, ban[sq], ban[to], 0, MOVE_CHECK_LONG);
 									}
 								}
 							} else {
@@ -696,7 +686,6 @@ MoveStack* Position::gen_check_long(const Color us, MoveStack* mlist) const
 		k2 = ky - kx;
 		b1 = by + bx;
 		b2 = by - bx;
-		int s, l;
 		// 一直線ならばここでは生成しない
 		if (k1 != b1 && k2 != b2) {
 			// 角・馬と玉が直線上にない
@@ -707,11 +696,11 @@ MoveStack* Position::gen_check_long(const Color us, MoveStack* mlist) const
 				y1 = (b2 + k1) / 2;
 				dir = 17;
 				if ((x1 >= 1) && (x1 <= 9) && (y1 >= 1) && (y1 <= 9)
-					&& ((pin[pos] == 0) || (pin[pos] == dir) || (pin[pos] == -dir))
-					&& (ban[to = ((x1 << 4)+y1)] == EMP || IsNotOwn(ban[to], SorG))) {
+					&& ((pin[sq] == 0) || (pin[sq] == dir) || (pin[sq] == -dir))
+					&& (ban[to = ((x1 << 4)+y1)] == EMP || color_of(ban[to]) != us)) {
 					bool moveF = true;
-					s = Min(pos, to);
-					l = Max(pos, to);
+					int s = Min(sq, to);
+					int l = Max(sq, to);
 					int j;
 					for (j = s + dir; j < l; j += dir) {
 						if (ban[j] != EMP) moveF = false;
@@ -723,13 +712,12 @@ MoveStack* Position::gen_check_long(const Color us, MoveStack* mlist) const
 						if (ban[j] != EMP) moveF = false;
 					}
 					if (moveF) {
-						if (((ban[pos] & PROMOTED) == 0)
-							&& ((us == BLACK && (y1 <= 3 || dan <= 3))
-							  ||(us != BLACK && (y1 >= 7 || dan >= 7)))) {
-							(mlist++)->move = cons_move(pos, to, ban[pos], ban[to], 1, MOVE_CHECK_LONG);
-							(mlist++)->move = cons_move(pos, to, ban[pos], ban[to], 0, MOVE_CHECK_LONG | MOVE_CHECK_NARAZU);
+						if (((ban[sq] & PROMOTED) == 0)
+						  && (can_promotion<us>(sq) || can_promotion<us>(to))) {
+							(mlist++)->move = cons_move(sq, to, ban[sq], ban[to], 1, MOVE_CHECK_LONG);
+							(mlist++)->move = cons_move(sq, to, ban[sq], ban[to], 0, MOVE_CHECK_LONG | MOVE_CHECK_NARAZU);
 						} else {
-							(mlist++)->move = cons_move(pos, to, ban[pos], ban[to], 0, MOVE_CHECK_LONG);
+							(mlist++)->move = cons_move(sq, to, ban[sq], ban[to], 0, MOVE_CHECK_LONG);
 						}
 					}
 				}
@@ -737,11 +725,11 @@ MoveStack* Position::gen_check_long(const Color us, MoveStack* mlist) const
 				y1 = (k2 + b1) / 2;
 				dir = 15;
 				if ((x1 >= 1) && (x1 <= 9) && (y1 >= 1) && (y1 <= 9)
-					&& ((pin[pos] == 0) || (pin[pos] == dir) || (pin[pos] == -dir))
-					&& (ban[to = ((x1 << 4)+y1)] == EMP || IsNotOwn(ban[to], SorG))) {
+					&& ((pin[sq] == 0) || (pin[sq] == dir) || (pin[sq] == -dir))
+					&& (ban[to = ((x1 << 4)+y1)] == EMP || color_of(ban[to]) != us)) {
 					bool moveF = true;
-					s = Min(pos, to);
-					l = Max(pos, to);
+					int s = Min(sq, to);
+					int l = Max(sq, to);
 					int j;
 					for (j = s + dir; j < l; j += dir) {
 						if (ban[j] != EMP) moveF = false;
@@ -753,48 +741,47 @@ MoveStack* Position::gen_check_long(const Color us, MoveStack* mlist) const
 						if (ban[j] != EMP) moveF = false;
 					}
 					if (moveF) {
-						if (((ban[pos] & PROMOTED) == 0)
-							&& ((us == BLACK && (y1 <= 3 || dan <= 3))
-							  ||(us != BLACK && (y1 >= 7 || dan >= 7)))) {
-							(mlist++)->move = cons_move(pos, to, ban[pos], ban[to], 1, MOVE_CHECK_LONG);
-							(mlist++)->move = cons_move(pos, to, ban[pos], ban[to], 0, MOVE_CHECK_LONG | MOVE_CHECK_NARAZU);
+						if (((ban[sq] & PROMOTED) == 0)
+						  && (can_promotion<us>(sq) || can_promotion<us>(to))) {
+							(mlist++)->move = cons_move(sq, to, ban[sq], ban[to], 1, MOVE_CHECK_LONG);
+							(mlist++)->move = cons_move(sq, to, ban[sq], ban[to], 0, MOVE_CHECK_LONG | MOVE_CHECK_NARAZU);
 						} else {
-							(mlist++)->move = cons_move(pos, to, ban[pos], ban[to], 0, MOVE_CHECK_LONG);
+							(mlist++)->move = cons_move(sq, to, ban[sq], ban[to], 0, MOVE_CHECK_LONG);
 						}
 					}
 				}
 			} else {
 				// 角の筋に玉がいない
 				// ⇒馬が縦横に動く手を生成する
-				if (ban[pos] & PROMOTED) {
-					static const int dir[4] = {-16, -1, 1, 16};
+				if (ban[sq] & PROMOTED) {
+					static const int dirs[4] = {-16, -1, 1, 16};
 					static const int p[4] = {-1, -1, +1, +1};	// y+x の増減
 					static const int m[4] = {+1, -1, +1, -1};	// y-x の増減
 					for (int dirID = 0; dirID < 4; dirID++) {
-						if (pin[pos] != 0 && pin[pos] != dir[dirID] && pin[pos] != -dir[dirID]) continue;
-						if (ban[pos + dir[dirID]] == WALL || (ban[pos + dir[dirID]] != EMP && !IsNotOwn(ban[pos + dir[dirID]], SorG))) continue;		// 味方の駒
+						if (pin[sq] != 0 && pin[sq] != dirs[dirID] && pin[sq] != -dirs[dirID]) continue;
+						if (ban[sq + dirs[dirID]] == WALL || (ban[sq + dirs[dirID]] != EMP && color_of(ban[sq + dirs[dirID]]) == us)) continue;		// 味方の駒
 						if (k1 == b1 + p[dirID]) {
 							//動いてp方向に王手
-							int s = Min(enemyKing, pos + dir[dirID]);
-							int l = Max(enemyKing, pos + dir[dirID]);
+							int s = Min(enemyKing, sq + dirs[dirID]);
+							int l = Max(enemyKing, sq + dirs[dirID]);
 							bool moveF = true;
 							for (int j = s + 15; j < l; j += 15) {
 								if (ban[j] != EMP) moveF = false;
 							}
 							if (moveF) {
-								(mlist++)->move = cons_move(pos, pos + dir[dirID], ban[pos], ban[pos + dir[dirID]], 0, MOVE_CHECK_LONG);
+								(mlist++)->move = cons_move(sq, sq + dirs[dirID], ban[sq], ban[sq + dirs[dirID]], 0, MOVE_CHECK_LONG);
 							}
 						}
 						if (k2 == b2 + m[dirID]) {
 							//動いてm方向に王手
-							int s = Min(enemyKing, pos + dir[dirID]);
-							int l = Max(enemyKing, pos + dir[dirID]);
+							int s = Min(enemyKing, sq + dirs[dirID]);
+							int l = Max(enemyKing, sq + dirs[dirID]);
 							bool moveF = true;
 							for (int j = s + 17; j < l; j += 17) {
 								if (ban[j] != EMP) moveF = false;
 							}
 							if (moveF) {
-								(mlist++)->move = cons_move(pos, pos + dir[dirID], ban[pos], ban[pos + dir[dirID]], 0, MOVE_CHECK_LONG);
+								(mlist++)->move = cons_move(sq, sq + dirs[dirID], ban[sq], ban[sq + dirs[dirID]], 0, MOVE_CHECK_LONG);
 							}
 						}
 					}
@@ -804,31 +791,26 @@ MoveStack* Position::gen_check_long(const Color us, MoveStack* mlist) const
 
 		// 未：3. 角が成ること及び馬による王手
 		{
-			static const int Directions[] = {-17, -15,  17, 15};
+			static const int dirs[] = {-17, -15,  17, 15};
 			static const int Positions[]  = { 16,   1, -16, -1};
 		
 			int i, j;
 			for (i = 0; i < 4; i++) {
 				to = enemyKing + Positions[i];
-				if (ban[to] != EMP && (ban[to] == WALL || !IsNotOwn(ban[to], SorG))) {		// 味方の駒
+				if (ban[to] != EMP && (ban[to] == WALL || color_of(ban[to]) == us)) {		// 味方の駒
 					continue;
 				}
 				for (j = 0; j < 4; j++) {
-					dir = Directions[j];
-					from = to + dir;
-					while (ban[from] == EMP) {
-						from += dir;
-					}
-					if (from == pos) {
-						if (ban[from] == (SorG | UM)
-							&& (pin[from] == 0 || pin[from] == dir || pin[from] == -dir)) {
-							(mlist++)->move = cons_move(from, to, ban[from], ban[to], 0);
-						} else if (ban[from] == (SorG | KA)
-							&& (pin[from] == 0 || pin[from] == dir || pin[from] == -dir)
-							&& (((((us == BLACK) && ((from & 0x0f) <= 3 || (to & 0x0f) <= 3)))
-								|| ((((us != BLACK) && ((from & 0x0f) >= 7 || (to & 0x0f) >=7))))))
+					dir = dirs[j];
+					if (sq == SkipOverEMP(to, dir)) {
+						if ((ban[sq] & PROMOTED)
+							&& (pin[sq] == 0 || pin[sq] == dir || pin[sq] == -dir)) {
+							(mlist++)->move = cons_move(sq, to, ban[sq], ban[to], 0);
+						} else if ((ban[sq] & PROMOTED) == 0
+							&& (pin[sq] == 0 || pin[sq] == dir || pin[sq] == -dir)
+							&& (can_promotion<us>(sq) || can_promotion<us>(to))
 							) {
-							(mlist++)->move = cons_move(from, to, ban[from], ban[to], 1);
+							(mlist++)->move = cons_move(sq, to, ban[sq], ban[to], 1);
 						}
 					}
 				}
@@ -837,18 +819,18 @@ MoveStack* Position::gen_check_long(const Color us, MoveStack* mlist) const
 	}
 
 	// 香車による王手
-	for (i = 0; i < 4; i++) {
+	for (int ky = 0; ky < 4; ky++) {
+		const int sq = kyPos[ky];
 		// 持駒は処理しない
-		if (!OnBoard(kyPos[i])) continue;
-		pos = kyPos[i];
+		if (!OnBoard(sq)) continue;
 
 		// 相手の駒は処理しない
-		if (IsNotOwn(ban[pos], SorG)) continue;
+		if (color_of(ban[sq]) != us) continue;
 		// 成香は処理しない
-		if (ban[pos] & PROMOTED) continue;
+		if (ban[sq] & PROMOTED) continue;
 
-		suji = pos & 0xF0;
-		dan  = pos & 0x0F;
+		suji = sq & 0xF0;
+		dan  = sq & 0x0F;
 
 		if (us == BLACK && dan > kdan) {
 			dir = 1;
@@ -860,36 +842,32 @@ MoveStack* Position::gen_check_long(const Color us, MoveStack* mlist) const
 
 		// 1. 香車と玉の間の駒を動かす or 取る
 		if (suji == ksuji) {
-			to = enemyKing + dir;
-			while (ban[to] == EMP) {
-				to = to + dir;
-			}
-			from = to + dir;
-			while (ban[from] == EMP) {
-				from = from + dir;
-			}
-			if (from == pos) {
-				if (IsNotOwn(ban[to], SorG)) {
+///			to = enemyKing + dir;
+///			while (ban[to] == EMP) {
+///				to = to + dir;
+///			}
+			to = SkipOverEMP(enemyKing, dir);
+			if (sq == SkipOverEMP(to, dir)) {
+				if (color_of(ban[to]) != us) {
 					// toにいる駒は敵
-					if ((pin[from] == 0 || pin[from] == dir || pin[from] == -dir)) {
+					if ((pin[sq] == 0 || pin[sq] == dir || pin[sq] == -dir)) {
 						// 成っても王手=目の前に王がいる＆成れるなら成る手も生成しましょう
 						if (to - dir == enemyKing) {
-							if ((us == BLACK && (to & 0x0F) <= 3)
-								|| (us != BLACK && (to & 0x0F) >= 7)) {
+							if (can_promotion<us>(to)) {
 								// 成る手
-								(mlist++)->move = cons_move(from, to, ban[from], ban[to], 1);
+								(mlist++)->move = cons_move(sq, to, ban[sq], ban[to], 1);
 							}
 							if ((us == BLACK && (to & 0x0F) == 2)
 								|| (us != BLACK && (to & 0x0F) == 8)) {
 								// 不成り
-								(mlist++)->move = cons_move(from, to, ban[from], ban[to], 0, MOVE_CHECK_LONG | MOVE_CHECK_NARAZU);
+								(mlist++)->move = cons_move(sq, to, ban[sq], ban[to], 0, MOVE_CHECK_LONG | MOVE_CHECK_NARAZU);
 							} else {
 								// 不成り
-								(mlist++)->move = cons_move(from, to, ban[from], ban[to], 0, MOVE_CHECK_LONG);
+								(mlist++)->move = cons_move(sq, to, ban[sq], ban[to], 0, MOVE_CHECK_LONG);
 							}
 						} else {
 							// 不成り
-							(mlist++)->move = cons_move(from, to, ban[from], ban[to], 0, MOVE_CHECK_LONG);
+							(mlist++)->move = cons_move(sq, to, ban[sq], ban[to], 0, MOVE_CHECK_LONG);
 						}
 					}
 				} else {
@@ -906,32 +884,32 @@ MoveStack* Position::gen_check_long(const Color us, MoveStack* mlist) const
 				to = enemyKing - 16;
 			}
 			if (to != 0) {
-				from = to + dir;
-				if (ban[to] != EMP && !IsNotOwn(ban[to], SorG)) {	// 味方の駒
+				int from = to + dir;
+				if (ban[to] != EMP && color_of(ban[to]) == us) {	// 味方の駒
 					to = from;
 					from += dir;
-				} else if (ban[from] != EMP && IsNotOwn(ban[from], SorG)) {	// 敵の駒
+				} else if (ban[from] != EMP && color_of(ban[from]) != us) {	// 敵の駒
 					to = from;
 					from += dir;
 				}
 				while (ban[from] == EMP) {
 					from += dir;
 				}
-				if (from == pos && (pin[from] == 0 || pin[from] == dir || pin[from] == -dir)) {
+				if (from == sq && (pin[sq] == 0 || pin[sq] == dir || pin[sq] == -dir)) {
 					if ((us == BLACK) && ((to & 0x0f) <= 3)) {
-						if (ban[to] == EMP || IsNotOwn(ban[to], SorG)) {
-							(mlist++)->move = cons_move(from, to, ban[from], ban[to], 1);
+						if (ban[to] == EMP || color_of(ban[to]) != us) {
+							(mlist++)->move = cons_move(sq, to, ban[sq], ban[to], 1);
 						}
-						if ((to & 0x0F) == kdan && kdan <= 2 && (from & 0x0F) != kdan + 1) {
-							(mlist++)->move = cons_move(from, to + dir, ban[from], ban[to+dir], 1);
+						if ((to & 0x0F) == kdan && kdan <= 2 && (sq & 0x0F) != kdan + 1) {
+							(mlist++)->move = cons_move(sq, to + dir, ban[sq], ban[to+dir], 1);
 						}
 					}
 					if ((us != BLACK) && ((to & 0x0f) >= 7)) {
-						if (ban[to] == EMP || IsNotOwn(ban[to], SorG)) {
-							(mlist++)->move = cons_move(from, to, ban[from], ban[to], 1);
+						if (ban[to] == EMP || color_of(ban[to]) != us) {
+							(mlist++)->move = cons_move(sq, to, ban[sq], ban[to], 1);
 						}
-						if ((to & 0x0F) == kdan && kdan >= 8 && (from & 0x0F) != kdan - 1) {
-							(mlist++)->move = cons_move(from, to + dir, ban[from], ban[to+dir], 1);
+						if ((to & 0x0F) == kdan && kdan >= 8 && (sq & 0x0F) != kdan - 1) {
+							(mlist++)->move = cons_move(sq, to + dir, ban[sq], ban[to+dir], 1);
 						}
 					}
 				}
@@ -942,7 +920,8 @@ MoveStack* Position::gen_check_long(const Color us, MoveStack* mlist) const
 }
 
 // 盤上の駒を動かす手で王手となるものを生成する.Ver.2
-MoveStack* Position::gen_check_short(const Color us, MoveStack* mlist) const
+template<Color us>
+MoveStack* Position::gen_check_short(MoveStack* mlist) const
 {
 	int enemyKing; 				// 手番側から見て、相手の玉の位置
 	if (us == BLACK) {
@@ -1031,7 +1010,8 @@ MoveStack* Position::gen_check_short(const Color us, MoveStack* mlist) const
 }
 
 // 駒を打つ手で王手となるものを生成する.
-MoveStack* Position::gen_check_drop(const Color us, MoveStack* mlist, bool& bUchifudume) const
+template <Color us>
+MoveStack* Position::gen_check_drop(MoveStack* mlist, bool& bUchifudume) const
 {
 	int enemyKing = (us == BLACK) ? kingG : kingS;	// 手番側から見て、相手の玉の位置
 	int suji, dan;
@@ -1297,7 +1277,8 @@ MoveStack* Position::gen_check_drop(const Color us, MoveStack* mlist, bool& bUch
 }
 
 // 駒を打つ手で王手となるものを生成する(残り3手用).
-MoveStack* Position::gen_check_drop3(const Color us, MoveStack* mlist, bool& bUchifudume) const
+template<Color us>
+MoveStack* Position::gen_check_drop3(MoveStack* mlist, bool& bUchifudume) const
 {
 	int enemyKing = (us == BLACK) ? kingG : kingS;	// 手番側から見て、相手の玉の位置
 	int suji, dan;
@@ -1531,8 +1512,8 @@ MoveStack* Position::gen_check_drop3(const Color us, MoveStack* mlist, bool& bUc
 	return mlist;
 }
 
-
-MoveStack* Position::generate_check(const Color us, MoveStack* mlist, bool& bUchifudume) const
+template<Color us>
+MoveStack* Position::generate_check(MoveStack* mlist, bool& bUchifudume) const
 {
 	int enemyKing = (us == BLACK) ? kingG : kingS;	// 手番側から見て、相手の玉の位置
 	if (enemyKing == 0) return 0;
@@ -1557,8 +1538,8 @@ MoveStack* Position::generate_check(const Color us, MoveStack* mlist, bool& bUch
 	}
 
 	// 盤上の駒を動かす手で王手となるものを生成する.
-	last = gen_check_long(us, mlist);
-	last = gen_check_short(us, last);
+	last = gen_check_long<us>(mlist);
+	last = gen_check_short<us>(last);
 
 	// 重複をなくす(重複は盤上の駒を動かす手に限られる)
 	if (last != mlist) {
@@ -1582,12 +1563,13 @@ MoveStack* Position::generate_check(const Color us, MoveStack* mlist, bool& bUch
 	}
 
 	// 駒を打つ手で王手となるものを生成する.
-	mlist = gen_check_drop(us, mlist, bUchifudume);
+	mlist = gen_check_drop<us>(mlist, bUchifudume);
 
 	return mlist;
 }
 
-MoveStack* Position::generate_check3(const Color us, MoveStack* mlist, bool& bUchifudume) const
+template<Color us>
+MoveStack* Position::generate_check3(MoveStack* mlist, bool& bUchifudume) const
 {
 	int enemyKing = (us == BLACK) ? kingG : kingS;	// 手番側から見て、相手の玉の位置
 	if (enemyKing == 0) return 0;
@@ -1612,8 +1594,8 @@ MoveStack* Position::generate_check3(const Color us, MoveStack* mlist, bool& bUc
 	}
 
 	// 盤上の駒を動かす手で王手となるものを生成する.
-	last = gen_check_long(us, mlist);
-	last = gen_check_short(us, last);
+	last = gen_check_long<us>(mlist);
+	last = gen_check_short<us>(last);
 
 	// 重複をなくす(重複は盤上の駒を動かす手に限られる)
 	if (last != mlist) {
@@ -1637,7 +1619,7 @@ MoveStack* Position::generate_check3(const Color us, MoveStack* mlist, bool& bUc
 	}
 
 	// 駒を打つ手で王手となるものを生成する.
-	mlist = gen_check_drop3(us, mlist, bUchifudume);
+	mlist = gen_check_drop<us>(mlist, bUchifudume);
 
 	return mlist;
 }
@@ -1788,6 +1770,9 @@ MYABORT();
 //
 int Position::Mate3(const Color us, Move &m)
 {
+#if defined(USE_M3HASH)
+	M3Perform::called++;
+#endif
 	assert(us == side_to_move());
 	// 1手詰めを確認
 	{
@@ -1798,6 +1783,7 @@ int Position::Mate3(const Color us, Move &m)
 
 #if defined(USE_M3HASH)
 	if (probe_m3hash(*this, m)) {
+		M3Perform::hashhit++;
 		return m == MOVE_NONE ? -VALUE_MATE : VALUE_MATE;
 	}
 #endif
@@ -1806,7 +1792,8 @@ int Position::Mate3(const Color us, Move &m)
 	MoveStack *cur, *last;
 	bool bUchifudume = false;
 
-	last = generate_check3(us, moves, bUchifudume);
+	last = (us == BLACK) ? generate_check3<BLACK>(moves, bUchifudume)
+	                     : generate_check3<WHITE>(moves, bUchifudume);
 	if (last == moves) {
 		return -VALUE_MATE; 	//詰まない
 	}
@@ -1819,6 +1806,9 @@ int Position::Mate3(const Color us, Move &m)
 		if ((move & MOVE_CHECK_NARAZU)) continue;
 		do_move(move, newSt);
 		int val;
+#if defined(DEBUG_MATE2)
+		pre_check = move;
+#endif
 		val = EvasionRest2(flip(us), last);
 		undo_move(move);
 
@@ -1833,7 +1823,7 @@ int Position::Mate3(const Color us, Move &m)
 	}
 
 #if defined(USE_M3HASH)
-			store_m3hash(*this, MOVE_NONE);
+	store_m3hash(*this, MOVE_NONE);
 #endif
 	return valmax;
 }
@@ -1849,8 +1839,13 @@ int Position::EvasionRest2(const Color us, MoveStack *antichecks)
 {
 	if (!in_check()) {
 		output_info("Error!:%s玉に王手がかかっていない！\n", us == BLACK ? "先手" : "後手");
+#if defined(DEBUG_MATE2)
+		this->print_csa(pre_check);
+		undo_move(pre_check);
 		this->print_csa();
+
 		MYABORT();
+#endif
 		return -VALUE_MATE;
 	}
 
@@ -1925,3 +1920,35 @@ int Position::EvasionRest2(const Color us, MoveStack *antichecks)
 	// どうやっても詰んでしまう
 	return VALUE_MATE;
 }
+
+// ベンチマークの時のみ呼ばれる.
+void analize_mate3()
+{
+#if defined(USE_M3HASH)
+	std::cerr << "\n==============================="
+	          << "\n Mate3() called  : " << M3Perform::called;
+	if (M3Perform::called > 0) {
+		std::cerr << "\n hash hit(count) : " << M3Perform::hashhit
+		          << "\n hash hit(%)     : " << (double)M3Perform::hashhit  / M3Perform::called * 100.0
+		          << "\n override(count) : " << M3Perform::override
+		          << "\n override(%)     : " << (double)M3Perform::override / M3Perform::called * 100.0;
+		          
+	}
+	int count = 0;
+	int mate = 0;
+	for (int i = 0; i < MATE3_MASK+1; i++) {
+		if (mate3_hash_tbl[i].word1 != 0 || mate3_hash_tbl[i].word2 != 0) {
+			count++;
+			if (static_cast<Move>(mate3_hash_tbl[i].word2 >> 32) != MOVE_NONE) mate++;
+		}
+	}
+	if (count > 0) {
+		std::cerr << "\n used(%)         : " << (double)count * 100.0  / (MATE3_MASK+1)
+		          << "\n      mate(%)    : " << (double)mate * 100.0 / count
+		          << std::endl;
+	}
+#endif
+}
+
+template MoveStack* Position::generate_check<BLACK>(MoveStack* mlist, bool& bUchifudume) const;
+template MoveStack* Position::generate_check<WHITE>(MoveStack* mlist, bool& bUchifudume) const;

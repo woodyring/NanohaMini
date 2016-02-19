@@ -2208,7 +2208,7 @@ int Position::Mate1ply(Move &m, uint32_t &info)
 		// ˆÚ“®‚É‚æ‚éˆêŽè‹l‚Ì”»’è
 		ret = CheckMate1plyMove<us>(info, m);
 		if (ret != 0) {
-			assert(is_ok(m));
+			assert(::is_ok(m));
 			COUNT_PERFORM(count_Mate1plyMove);
 			CHK_MATE1PLY(m);
 			return VALUE_MATE;
@@ -2217,7 +2217,7 @@ int Position::Mate1ply(Move &m, uint32_t &info)
 		// ‹î‘Å‚É‚æ‚éˆêŽè‹l‚Ì”»’è
 		ret = CheckMate1plyDrop<us>(info, m);
 		if (ret != 0) {
-			assert(is_ok(m));
+			assert(::is_ok(m));
 			COUNT_PERFORM(count_Mate1plyDrop);
 			CHK_MATE1PLY(m);
 			return VALUE_MATE;
@@ -2236,7 +2236,7 @@ int Position::Mate1ply(Move &m, uint32_t &info)
 		// ˆÚ“®‚É‚æ‚éˆêŽè‹l‚Ì”»’è
 		ret = CheckMate1plyMove<us>(info, m, check);
 		if (ret != 0) {
-			assert(is_ok(m));
+			assert(::is_ok(m));
 			COUNT_PERFORM(count_Mate1plyMove);
 			CHK_MATE1PLY(m);
 			return VALUE_MATE;
